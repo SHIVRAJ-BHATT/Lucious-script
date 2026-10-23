@@ -1,0 +1,22 @@
+{
+ "strings": {
+  "strings/characters/agent_johnson": "Agent Johnson",
+  "strings/characters/b9000": "B-9000",
+  "strings/characters/bernard": "Bernard",
+  "strings/characters/betty": "Betty",
+  "strings/characters/bones": "Bones",
+  "strings/characters/easter_bunny": "Easter Bunny",
+  "strings/characters/frosty": "Frosty",
+  "strings/characters/grumbledorf": "Grumbledorf",
+  "strings/characters/jack_morgan": "Jack Morgan",
+  "strings/characters/kronk": "Kronk",
+  "strings/characters/lucky": "Lucky",
+  "strings/characters/mel": "Mel",
+  "strings/characters/pascal": "Pascal",
+  "strings/characters/pixel": "Pixel",
+  "strings/characters/santa_claus": "Santa Claus",
+  "strings/characters/snake_shadow": "Snake Shadow",
+  "strings/characters/spaz": "Spaz",
+  "strings/characters/zoe": "Zoe"
+ }
+}

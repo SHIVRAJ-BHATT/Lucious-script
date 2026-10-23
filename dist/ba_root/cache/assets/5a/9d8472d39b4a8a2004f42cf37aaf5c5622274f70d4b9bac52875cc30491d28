@@ -1,0 +1,15 @@
+{
+ "e": {
+  "textures/circle_no_alpha": {},
+  "textures/circle_outline": {},
+  "textures/circle_outline_no_alpha": {},
+  "textures/explosion": {},
+  "textures/eye_color": {},
+  "textures/eye_color_tint_mask": {},
+  "textures/rgb_stripes": {},
+  "textures/scorch": {},
+  "textures/scorch_big": {},
+  "textures/shield": {},
+  "textures/wings": {}
+ }
+}

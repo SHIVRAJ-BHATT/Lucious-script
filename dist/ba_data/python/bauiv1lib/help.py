@@ -1,0 +1,856 @@
+# Released under the MIT License. See LICENSE for details.
+#
+"""Provides help related ui."""
+
+from typing import override
+
+import random
+
+import bauiv1 as bui
+from bauiv1 import _classicassets, _classiccharacterassets
+from bauiv1 import _builtinassets
+
+from bauiv1lib.utils import get_screen_margins
+
+
+class HelpWindow(bui.MainWindow):
+    """A window providing help on how to play."""
+
+    def __init__(
+        self,
+        transition: str | None = 'in_right',
+        origin_widget: bui.Widget | None = None,
+    ):
+        # pylint: disable=too-many-statements
+        # pylint: disable=too-many-locals
+
+        bui.set_analytics_screen('Help Window')
+
+        self._r = 'helpWindow'
+
+        assert bui.app.classic is not None
+        uiscale = bui.app.ui_v1.uiscale
+        width = 1050 if uiscale is bui.UIScale.SMALL else 750
+
+        height = (
+            700
+            if uiscale is bui.UIScale.SMALL
+            else 530 if uiscale is bui.UIScale.MEDIUM else 600
+        )
+
+        # Do some fancy math to fill all available screen area up to the
+        # size of our backing container. This lets us fit to the exact
+        # screen shape at small ui scale.
+        screensize = bui.get_virtual_screen_size()
+        scale = (
+            1.8
+            if uiscale is bui.UIScale.SMALL
+            else 1.15 if uiscale is bui.UIScale.MEDIUM else 1.0
+        )
+        # Calc screen size in our local container space and clamp to a
+        # bit smaller than our container size.
+        target_width = min(width - 90, screensize[0] / scale)
+        target_height = min(height - 90, screensize[1] / scale)
+
+        # To get top/left coords, go to the center of our window and
+        # offset by half the width/height of our target area.
+        yoffs = 0.5 * height + 0.5 * target_height
+
+        scroll_width = target_width
+
+        # Use the full screen area in small mode (we'll include our
+        # title in the scrollable content).
+        if uiscale is bui.UIScale.SMALL:
+            scroll_height = target_height
+            scroll_bottom = yoffs - scroll_height
+        else:
+            # Title and back button (sized like doc-ui windows' on
+            # screen, as of 2026-09-30) share a band at the top; the
+            # scroll area runs from under it down to the target area's
+            # bottom.
+            yoffs += 30
+            scroll_height = target_height - 16
+            scroll_bottom = yoffs - 44 - scroll_height
+
+        # At medium/large, extend our scroll area's top up behind our
+        # title, with a longer top fade keeping the title legible over
+        # content scrolled up there; our content gets padded by the
+        # same amount so it stays put.
+        scroll_top_extend = 0.0 if uiscale is bui.UIScale.SMALL else 40.0
+        scroll_height += scroll_top_extend
+
+        # In small ui (where we cover the screen), extend our scroll
+        # area out to cover any margins between the virtual rect and
+        # the visible screen edges (cutout insets and whatnot),
+        # insetting content by those same amounts so it stays put and
+        # only the scroll surface itself reaches further out.
+        margin_left, margin_right, margin_bottom, margin_top = (
+            get_screen_margins(scale)
+            if uiscale is bui.UIScale.SMALL
+            else (0.0, 0.0, 0.0, 0.0)
+        )
+
+        super().__init__(
+            root_widget=bui.containerwidget(
+                size=(width, height),
+                toolbar_visibility=(
+                    'menu_minimal'
+                    if uiscale is bui.UIScale.SMALL
+                    else 'menu_full'
+                ),
+                scale=scale,
+            ),
+            transition=transition,
+            origin_widget=origin_widget,
+            # We're affected by screen size only at small ui-scale.
+            refresh_on_screen_size_changes=uiscale is bui.UIScale.SMALL,
+        )
+
+        self._scrollwidget = bui.scrollwidget(
+            parent=self._root_widget,
+            size=(
+                scroll_width + margin_left + margin_right,
+                scroll_height + margin_bottom + margin_top,
+            ),
+            position=(
+                width * 0.5 - scroll_width * 0.5 - margin_left,
+                scroll_bottom - margin_bottom,
+            ),
+            simple_culling_v=100.0,
+            capture_arrows=True,
+            border_opacity=0.4,
+            center_small_content_horizontally=True,
+            # Arrows scroll us; past either end they move on to our
+            # neighbors (toolbars included, via autoselect). No
+            # selection glow (it clashes with our title overlap).
+            move_out_at_ends=True,
+            highlight=False,
+        )
+        bui.widget(edit=self._scrollwidget, autoselect=True)
+        if uiscale is not bui.UIScale.SMALL:
+            # Content fades into our backing at our top and bottom
+            # (nothing scrolls sideways, so no fades there).
+            bui.scrollwidget(
+                edit=self._scrollwidget,
+                fading_scrollbar=True,
+                edge_style='fade',
+                edge_fade=(0.0, 40.0, 0.0, 40.0 + scroll_top_extend),
+            )
+
+        # (Made after our scroll area, which can reach up behind it:
+        # presses go to the last-made widget wanting them.)
+        if uiscale is bui.UIScale.SMALL:
+            bui.containerwidget(
+                edit=self._root_widget, on_cancel_call=self.main_window_back
+            )
+        else:
+            # (Centered at (74, yoffs - 22), on the title.)
+            back_scale = 0.69 if uiscale is bui.UIScale.MEDIUM else 0.57
+            btn = bui.buttonwidget(
+                parent=self._root_widget,
+                id=f'{self.main_window_id_prefix}|back',
+                position=(
+                    74.0 - 30.0 * back_scale,
+                    yoffs - 22.0 - 27.5 * back_scale,
+                ),
+                size=(60, 55),
+                scale=back_scale,
+                label=bui.SpecialChar.BACK.value,
+                button_type='backSmall',
+                extra_touch_border_scale=2.0,
+                autoselect=True,
+                on_activate_call=self.main_window_back,
+            )
+            # Draw in front of our scroll area's fade.
+            bui.widget(
+                edit=btn,
+                depth_range=(0.9, 1.0),
+                down_widget=self._scrollwidget,
+            )
+            bui.containerwidget(edit=self._root_widget, cancel_button=btn)
+
+        # Moving up out of our scroll area lands on our back button
+        # (the toolbar's in small ui); down finds the toolbars below
+        # (autoselect).
+        if uiscale is bui.UIScale.SMALL:
+            back_button = bui.get_special_widget('back_button')
+            bui.widget(edit=self._scrollwidget, left_widget=back_button)
+        else:
+            back_button = btn
+        bui.widget(edit=self._scrollwidget, up_widget=back_button)
+        bui.widget(
+            edit=self._scrollwidget,
+            right_widget=bui.get_special_widget('squad_button'),
+        )
+        bui.containerwidget(
+            edit=self._root_widget, selected_child=self._scrollwidget
+        )
+
+        inline_title_height = 50
+
+        self._sub_width = 660
+        # NOTE: someDaysExtraSpace + orPunchingSomethingExtraSpace were
+        # per-language layout tweaks (English value 0); hard-coded for the
+        # strings migration (revisit in Step B; see followups.md).
+        self._sub_height = 1590.0
+
+        # Make space for our title when we're stuffing it inline.
+        if uiscale is bui.UIScale.SMALL:
+            self._sub_height += inline_title_height
+
+        # Grow to cover any screen margins, insetting content to match
+        # (via sub_center_x and the margin_top shifts below). Content
+        # centering still works out with asymmetric margins: the scroll
+        # centers us within itself, which spans the full visible area,
+        # so our center sits at the visible center and the extra
+        # margin_left baked into sub_center_x lands content back at the
+        # virtual-rect center.
+        self._sub_height += margin_bottom + margin_top + scroll_top_extend
+        sub_center_x = margin_left + 0.5 * self._sub_width
+
+        self._subcontainer = bui.containerwidget(
+            parent=self._scrollwidget,
+            id=f'{self.main_window_id_prefix}|sub',
+            size=(
+                self._sub_width + margin_left + margin_right,
+                self._sub_height,
+            ),
+            background=False,
+            claims_left_right=False,
+        )
+
+        # Stick our title on the scrollable content in small ui mode so
+        # we can use the full screen area for said content.
+        title = bui.textwidget(
+            parent=(
+                self._subcontainer
+                if uiscale is bui.UIScale.SMALL
+                else self._root_widget
+            ),
+            position=(
+                (sub_center_x, self._sub_height - margin_top - 20)
+                if uiscale is bui.UIScale.SMALL
+                else (width * 0.5, yoffs - 22)
+            ),
+            size=(0, 0),
+            text=_classicassets.strings.help.title(
+                app_name=_classicassets.strings.ui.app_name
+            ),
+            # (Medium/large: doc-ui windows' title size on screen, as
+            # of 2026-09-30.)
+            scale=(
+                0.9
+                if uiscale is bui.UIScale.SMALL
+                else 0.78 if uiscale is bui.UIScale.MEDIUM else 0.65
+            ),
+            maxwidth=scroll_width * 0.7,
+            color=bui.app.ui_v1.title_color,
+            h_align='center',
+            v_align='center',
+        )
+        if uiscale is not bui.UIScale.SMALL:
+            # Draw in front of our scroll area's fade.
+            bui.widget(edit=title, depth_range=(0.9, 1.0))
+
+        spacing = 1.0
+        baseh = sub_center_x
+        h = baseh + 30
+        v = self._sub_height - margin_top - scroll_top_extend - 55
+        if uiscale is bui.UIScale.SMALL:
+            v -= inline_title_height
+
+        logo_tex = _classicassets.textures.logo.get()
+        icon_buffer = 1.1
+        header = (0.7, 1.0, 0.7, 1.0)
+        header2 = (0.8, 0.8, 1.0, 1.0)
+        paragraph = (0.8, 0.8, 1.0, 1.0)
+
+        txt = _classicassets.strings.help.welcome(
+            app_name=_classicassets.strings.ui.app_name
+        ).evaluate()
+        txt_scale = 1.4
+        txt_maxwidth = 480
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=0.5,
+            res_scale=1.5,
+            text=txt,
+            h_align='center',
+            color=header,
+            v_align='center',
+            maxwidth=txt_maxwidth,
+        )
+        txt_width = min(
+            txt_maxwidth,
+            bui.get_string_width(
+                txt, suppress_warning=True, suppress_logic_thread_warning=True
+            )
+            * txt_scale,
+        )
+
+        icon_size = 70
+        hval2 = h - (txt_width * 0.5 + icon_size * 0.5 * icon_buffer)
+        bui.imagewidget(
+            parent=self._subcontainer,
+            size=(icon_size, icon_size),
+            position=(hval2 - 0.5 * icon_size, v - 0.45 * icon_size),
+            texture=logo_tex,
+        )
+        h = baseh
+
+        app = bui.app
+        assert app.classic is not None
+
+        v -= spacing * 50.0
+        txt = _classicassets.strings.help.some_days.evaluate()
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=1.2,
+            maxwidth=self._sub_width * 0.9,
+            text=txt,
+            h_align='center',
+            color=paragraph,
+            v_align='center',
+            flatness=1.0,
+        )
+        # (+ someDaysExtraSpace, English value 0; see followups.md)
+        v -= spacing * 25.0
+        txt_scale = 0.66
+        txt = _classicassets.strings.help.or_punching_something.evaluate()
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=self._sub_width * 0.9,
+            text=txt,
+            h_align='center',
+            color=paragraph,
+            v_align='center',
+            flatness=1.0,
+        )
+        # (+ orPunchingSomethingExtraSpace, English value 0; see followups.md)
+        v -= spacing * 27.0
+        txt_scale = 1.0
+        txt = _classicassets.strings.help.can_help(
+            app_name=_classicassets.strings.ui.app_name
+        ).evaluate()
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=1.0,
+            text=txt,
+            h_align='center',
+            color=paragraph,
+            v_align='center',
+        )
+
+        v -= spacing * 70.0
+        txt_scale = 1.0
+        txt = _classicassets.strings.help.to_get_the_most.evaluate()
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=self._sub_width * 0.9,
+            text=txt,
+            h_align='center',
+            color=header,
+            v_align='center',
+            flatness=1.0,
+        )
+
+        h = baseh + 20
+
+        v -= spacing * 40.0
+        txt_scale = 0.74
+        txt = _classicassets.strings.help.friends.evaluate()
+        hval2 = h - 220
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(hval2, v),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=100,
+            text=txt,
+            h_align='right',
+            color=header,
+            v_align='center',
+            flatness=1.0,
+        )
+
+        txt = _classicassets.strings.help.friends_good(
+            app_name=_classicassets.strings.ui.app_name
+        ).evaluate()
+        txt_scale = 0.7
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(hval2 + 10, v + 8),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=500,
+            text=txt,
+            h_align='left',
+            color=paragraph,
+            flatness=1.0,
+        )
+
+        app = bui.app
+
+        v -= spacing * 45.0
+        txt = (
+            _classicassets.strings.help.devices.evaluate()
+            if app.env.vr
+            else _classicassets.strings.help.controllers.evaluate()
+        )
+        txt_scale = 0.74
+        hval2 = h - 220
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(hval2, v),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=100,
+            text=txt,
+            h_align='right',
+            v_align='center',
+            color=header,
+            flatness=1.0,
+        )
+
+        txt_scale = 0.7
+        if not app.env.vr:
+            txt = _classicassets.strings.help.controllers_info(
+                app_name=_classicassets.strings.ui.app_name,
+                remote_app_name=_classicassets.strings.ui.remote_app_name,
+            ).evaluate()
+        else:
+            txt = _classicassets.strings.help.devices_info(
+                app_name=_classicassets.strings.ui.app_name
+            ).evaluate()
+
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(hval2 + 10, v + 8),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=500,
+            max_height=105,
+            text=txt,
+            h_align='left',
+            color=paragraph,
+            flatness=1.0,
+        )
+
+        v -= spacing * 150.0
+
+        h = baseh + 30
+
+        txt = _classicassets.strings.help.controls.evaluate()
+        txt_scale = 1.4
+        txt_maxwidth = 480
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=0.5,
+            text=txt,
+            h_align='center',
+            color=header,
+            v_align='center',
+            res_scale=1.5,
+            maxwidth=txt_maxwidth,
+        )
+        txt_width = min(
+            txt_maxwidth,
+            bui.get_string_width(
+                txt, suppress_warning=True, suppress_logic_thread_warning=True
+            )
+            * txt_scale,
+        )
+        icon_size = 70
+
+        hval2 = h - (txt_width * 0.5 + icon_size * 0.5 * icon_buffer)
+        bui.imagewidget(
+            parent=self._subcontainer,
+            size=(icon_size, icon_size),
+            position=(hval2 - 0.5 * icon_size, v - 0.45 * icon_size),
+            texture=logo_tex,
+        )
+
+        v -= spacing * 45.0
+
+        h = baseh
+
+        txt_scale = 0.7
+        txt = _classicassets.strings.help.controls_subtitle(
+            app_name=_classicassets.strings.ui.app_name
+        ).evaluate()
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=self._sub_width * 0.9,
+            flatness=1.0,
+            text=txt,
+            h_align='center',
+            color=paragraph,
+            v_align='center',
+        )
+        v -= spacing * 160.0
+
+        sep = 70
+        icon_size = 100
+        # icon_size_2 = 30
+        hval2 = h - sep
+        vval2 = v
+        bui.buttonwidget(
+            parent=self._subcontainer,
+            label='',
+            size=(icon_size, icon_size),
+            position=(hval2 - 0.5 * icon_size, vval2 - 0.5 * icon_size),
+            texture=_classicassets.textures.button_punch.get(),
+            color=(1, 0.7, 0.3),
+            selectable=False,
+            enable_sound=False,
+            on_activate_call=bui.WeakCallStrict(
+                self._play_sound,
+                [
+                    _classiccharacterassets.audio.spaz_attack01,
+                    _classiccharacterassets.audio.spaz_attack02,
+                    _classiccharacterassets.audio.spaz_attack03,
+                    _classiccharacterassets.audio.spaz_attack04,
+                ],
+            ),
+        )
+
+        txt_scale = 0.6  # punchInfoTextScale (English value; see followups.md)
+        txt = _classicassets.strings.help.punch_info.evaluate()
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h - sep - 185 + 70, v + 120),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=1.0,
+            text=txt,
+            h_align='center',
+            color=(1, 0.7, 0.3, 1.0),
+            v_align='top',
+        )
+
+        hval2 = h + sep
+        vval2 = v
+        bui.buttonwidget(
+            parent=self._subcontainer,
+            label='',
+            size=(icon_size, icon_size),
+            position=(hval2 - 0.5 * icon_size, vval2 - 0.5 * icon_size),
+            texture=_classicassets.textures.button_bomb.get(),
+            color=(1, 0.3, 0.3),
+            selectable=False,
+            enable_sound=False,
+            on_activate_call=bui.WeakCallStrict(
+                self._play_sound,
+                [
+                    _classicassets.audio.explosion01,
+                    _classicassets.audio.explosion02,
+                    _classicassets.audio.explosion03,
+                    _classicassets.audio.explosion04,
+                    _classicassets.audio.explosion05,
+                ],
+            ),
+        )
+
+        txt = _classicassets.strings.help.bomb_info.evaluate()
+        txt_scale = 0.6  # bombInfoTextScale (English value; see followups.md)
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h + sep + 50 + 60, v - 35),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=1.0,
+            maxwidth=270,
+            text=txt,
+            h_align='center',
+            color=(1, 0.3, 0.3, 1.0),
+            v_align='top',
+        )
+
+        hval2 = h
+        vval2 = v + sep
+        bui.buttonwidget(
+            parent=self._subcontainer,
+            label='',
+            size=(icon_size, icon_size),
+            position=(hval2 - 0.5 * icon_size, vval2 - 0.5 * icon_size),
+            texture=_classicassets.textures.button_pick_up.get(),
+            color=(0.5, 0.5, 1),
+            selectable=False,
+            enable_sound=False,
+            on_activate_call=bui.WeakCallStrict(
+                self._play_sound,
+                [_classiccharacterassets.audio.spaz_pickup01],
+            ),
+        )
+
+        txtl: bui.Lstr | bui.LangStr = _classicassets.strings.help.pick_up_info
+        txt_scale = 0.6  # pickUpInfoTextScale (English value; see followups.md)
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h + 60 + 120, v + sep + 50),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=1.0,
+            text=txtl,
+            h_align='center',
+            color=(0.5, 0.5, 1, 1.0),
+            v_align='top',
+        )
+
+        hval2 = h
+        vval2 = v - sep
+        bui.buttonwidget(
+            parent=self._subcontainer,
+            label='',
+            size=(icon_size, icon_size),
+            position=(hval2 - 0.5 * icon_size, vval2 - 0.5 * icon_size),
+            texture=_classicassets.textures.button_jump.get(),
+            color=(0.4, 1, 0.4),
+            selectable=False,
+            enable_sound=False,
+            on_activate_call=bui.WeakCallStrict(
+                self._play_sound,
+                [
+                    _classiccharacterassets.audio.spaz_jump01,
+                    _classiccharacterassets.audio.spaz_jump02,
+                    _classiccharacterassets.audio.spaz_jump03,
+                    _classiccharacterassets.audio.spaz_jump04,
+                ],
+            ),
+        )
+
+        txt = _classicassets.strings.help.jump_info.evaluate()
+        txt_scale = 0.6  # jumpInfoTextScale (English value; see followups.md)
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h - 250 + 75, v - sep - 15 + 30),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=1.0,
+            text=txt,
+            h_align='center',
+            color=(0.4, 1, 0.4, 1.0),
+            v_align='top',
+        )
+
+        txt = _classicassets.strings.help.run_info.evaluate()
+        txt_scale = 0.6  # runInfoTextScale (English value; see followups.md)
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v - sep - 100),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=self._sub_width * 0.93,
+            flatness=1.0,
+            text=txt,
+            h_align='center',
+            color=(0.7, 0.7, 1.0, 1.0),
+            v_align='center',
+        )
+
+        v -= spacing * 280.0
+
+        h = baseh + 30
+
+        txt = _classicassets.strings.help.powerups.evaluate()
+        txt_scale = 1.4
+        txt_maxwidth = 480
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            flatness=0.5,
+            text=txt,
+            h_align='center',
+            color=header,
+            v_align='center',
+            maxwidth=txt_maxwidth,
+        )
+        txt_width = min(
+            txt_maxwidth,
+            bui.get_string_width(
+                txt, suppress_warning=True, suppress_logic_thread_warning=True
+            )
+            * txt_scale,
+        )
+        icon_size = 70
+        hval2 = h - (txt_width * 0.5 + icon_size * 0.5 * icon_buffer)
+        bui.imagewidget(
+            parent=self._subcontainer,
+            size=(icon_size, icon_size),
+            position=(hval2 - 0.5 * icon_size, v - 0.45 * icon_size),
+            texture=logo_tex,
+        )
+
+        h = baseh + 20
+
+        v -= spacing * 50.0
+        # powerupsSubtitleTextScale (English value; see followups.md)
+        txt_scale = 0.8
+        txt = _classicassets.strings.help.powerups_subtitle.evaluate()
+        bui.textwidget(
+            parent=self._subcontainer,
+            position=(h, v),
+            size=(0, 0),
+            scale=txt_scale,
+            maxwidth=self._sub_width * 0.9,
+            text=txt,
+            h_align='center',
+            color=paragraph,
+            v_align='center',
+            flatness=1.0,
+        )
+
+        h = baseh + 20
+
+        v -= spacing * 1.0
+
+        mm1 = -270
+        mm2 = -215
+        mm3 = 0
+        icon_size = 50
+        shadow_size = 80
+        shadow_offs_x = 3
+        shadow_offs_y = -4
+        t_big = 1.1
+        t_small = 0.65
+
+        shadow_tex = _builtinassets.textures.shadow_sharp.get()
+
+        hstrs = _classicassets.strings.help
+        htex = _classicassets.textures
+        for name, desc, tex in [
+            (
+                hstrs.powerup_punch_name,
+                hstrs.powerup_punch_description,
+                htex.powerup_punch.get(),
+            ),
+            (
+                hstrs.powerup_shield_name,
+                hstrs.powerup_shield_description,
+                htex.powerup_shield.get(),
+            ),
+            (
+                hstrs.powerup_triple_bombs_name,
+                hstrs.powerup_triple_bombs_description,
+                htex.powerup_bomb.get(),
+            ),
+            (
+                hstrs.powerup_health_name,
+                hstrs.powerup_health_description,
+                htex.powerup_health.get(),
+            ),
+            (
+                hstrs.powerup_ice_bombs_name,
+                hstrs.powerup_ice_bombs_description,
+                htex.powerup_ice_bombs.get(),
+            ),
+            (
+                hstrs.powerup_impact_bombs_name,
+                hstrs.powerup_impact_bombs_description,
+                htex.powerup_impact_bombs.get(),
+            ),
+            (
+                hstrs.powerup_sticky_bombs_name,
+                hstrs.powerup_sticky_bombs_description,
+                htex.powerup_sticky_bombs.get(),
+            ),
+            (
+                hstrs.powerup_land_mines_name,
+                hstrs.powerup_land_mines_description,
+                htex.powerup_land_mines.get(),
+            ),
+            (
+                hstrs.powerup_curse_name,
+                hstrs.powerup_curse_description,
+                htex.powerup_curse.get(),
+            ),
+        ]:
+
+            v -= spacing * 60.0
+
+            bui.imagewidget(
+                parent=self._subcontainer,
+                size=(shadow_size, shadow_size),
+                position=(
+                    h + mm1 + shadow_offs_x - 0.5 * shadow_size,
+                    v + shadow_offs_y - 0.5 * shadow_size,
+                ),
+                texture=shadow_tex,
+                color=(0, 0, 0),
+                opacity=0.5,
+            )
+            bui.imagewidget(
+                parent=self._subcontainer,
+                size=(icon_size, icon_size),
+                position=(h + mm1 - 0.5 * icon_size, v - 0.5 * icon_size),
+                texture=tex,
+            )
+
+            txt_scale = t_big
+            txtl = name
+            bui.textwidget(
+                parent=self._subcontainer,
+                position=(h + mm2, v + 3),
+                size=(0, 0),
+                scale=txt_scale,
+                maxwidth=200,
+                flatness=1.0,
+                text=txtl,
+                h_align='left',
+                color=header2,
+                v_align='center',
+            )
+            txt_scale = t_small
+            txtl = desc
+            bui.textwidget(
+                parent=self._subcontainer,
+                position=(h + mm3, v),
+                size=(0, 0),
+                scale=txt_scale,
+                maxwidth=290,
+                flatness=1.0,
+                text=txtl,
+                h_align='left',
+                color=paragraph,
+                v_align='center',
+                res_scale=0.5,
+            )
+
+    def _play_sound(self, sounds: list[bui.SoundHandle]) -> None:
+        random.choice(sounds).get().play()
+
+    @override
+    def get_main_window_state(self) -> bui.MainWindowState:
+        # Support recreating our window for back/refresh purposes.
+        cls = type(self)
+        return bui.BasicMainWindowState(
+            create_call=lambda transition, origin_widget: cls(
+                transition=transition, origin_widget=origin_widget
+            )
+        )
+
+    @override
+    def main_window_should_preserve_selection(self) -> bool:
+        return True

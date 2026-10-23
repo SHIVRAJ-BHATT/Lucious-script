@@ -1,4 +1,4 @@
-dist/
+dist/ba_root/cachedist/ba_root/cache
 build/
 __pycache__/
 *.pyc

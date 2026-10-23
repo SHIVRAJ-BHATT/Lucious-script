@@ -1,0 +1,60 @@
+{
+    "enabled": true,
+    "settings": {
+        "display_powerup_names": true,
+        "display_disappear_timer": true
+    },
+    "powerups": {
+        "triple_bombs": {
+            "enabled": true,
+            "quantity": 1,
+            "display_name": "Triple Bombs"
+        },
+        "punch": {
+            "enabled": false,
+            "quantity": 0,
+            "display_name": "Boxing Gloves"
+        },
+        "ice_bombs": {
+            "enabled": true,
+            "quantity": 1,
+            "display_name": "Ice Bombs"
+        },
+        "impact_bombs": {
+            "enabled": true,
+            "quantity": 1,
+            "display_name": "Impact Bombs"
+        },
+        "land_mines": {
+            "enabled": true,
+            "quantity": 1,
+            "display_name": "Land Mines"
+        },
+        "sticky_bombs": {
+            "enabled": true,
+            "quantity": 1,
+            "display_name": "Sticky Bombs"
+        },
+        "shield": {
+            "enabled": false,
+            "quantity": 0,
+            "display_name": "Shield"
+        },
+        "health": {
+            "enabled": true,
+            "quantity": 1,
+            "display_name": "Health"
+        },
+        "curse": {
+            "enabled": false,
+            "quantity": 0,
+            "display_name": "Curse"
+        },
+        "moon_gravity": {
+            "enabled": false,
+            "quantity": 2,
+            "display_name": "Moon Gravity",
+            "spawn_weight": 3
+        }
+    }
+}

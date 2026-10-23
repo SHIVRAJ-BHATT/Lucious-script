@@ -1,0 +1,27 @@
+{
+ "e": {
+  "textures/circle": {},
+  "textures/circle_shadow": {},
+  "textures/cursor": {},
+  "textures/font_big": {},
+  "textures/font_extras": {},
+  "textures/font_extras2": {},
+  "textures/font_extras3": {},
+  "textures/font_extras4": {},
+  "textures/font_extras5": {},
+  "textures/font_small0": {},
+  "textures/font_small1": {},
+  "textures/font_small2": {},
+  "textures/font_small3": {},
+  "textures/font_small4": {},
+  "textures/font_small5": {},
+  "textures/font_small6": {},
+  "textures/font_small7": {},
+  "textures/howdy": {},
+  "textures/shadow": {},
+  "textures/shadow_sharp": {},
+  "textures/soft_rect2_mask": {},
+  "textures/soft_rect_mask": {},
+  "textures/soft_rect_vertical": {}
+ }
+}

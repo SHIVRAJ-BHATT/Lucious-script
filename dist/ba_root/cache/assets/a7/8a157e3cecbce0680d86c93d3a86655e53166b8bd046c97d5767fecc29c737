@@ -1,0 +1,214 @@
+{
+ "strings": {
+  "strings/cloud/came_from_cloud": "This page came from the cloud.",
+  "strings/cloud/cloud_msg_get": {
+   "v": "Cloud-Msg GET",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/cloud/cloud_msg_post": {
+   "v": "Cloud-Msg POST",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/cloud/cloud_test": "Cloud Test",
+  "strings/common/code_literal": "{text}",
+  "strings/common/docui_reference": "Use this as a reference for building UIs with DocUI. Its code lives at bauiv1lib.docuitest.",
+  "strings/common/each_change": "Each change here is a new request/response.",
+  "strings/common/foo": {
+   "v": "foo",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/common/header_left": "HeaderLeft",
+  "strings/common/header_right": "HeaderRight",
+  "strings/common/hello_from_docui": "Hello from DocUI!",
+  "strings/common/hello_there": {
+   "v": "Hello There!",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/common/hello_there_num": "Hello There {num}",
+  "strings/common/hide_debug": "Hide Debug",
+  "strings/common/invalid_request": {
+   "v": "Invalid Request",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/common/show_debug": "Show Debug",
+  "strings/common/sure_did": {
+   "v": "Sure Did",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/common/that_took_a_while": "That Took a While",
+  "strings/common/timed_actions": {
+   "v": "Timed Actions",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/common/you_are": "You are: {name}",
+  "strings/effects/effect_success": "Success!",
+  "strings/effects/immediate_client_effects": {
+   "v": "Immediate ClientEffects",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/effects/immediate_effects_hello": "Hello From Immediate Client Effects",
+  "strings/effects/immediate_local_action": {
+   "v": "Immediate Local Action",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/effects/response_client_effects": {
+   "v": "Response Client Effects",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/effects/response_effects_hello": "Hello From Response Client Effects",
+  "strings/effects/response_local_action": {
+   "v": "Response Local Action",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/items/display_item_tests": "Display Item Tests",
+  "strings/items/display_items": {
+   "v": "Display Items",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/items/display_items_sub": "top=FULL, center=COMPACT, bottom=ICON; left=regular, right=unknown",
+  "strings/layout/background_texture": "(background texture)",
+  "strings/layout/bounds_test": {
+   "v": "Bounds Test",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/layout/bounds_tests": {
+   "v": "Bounds Tests",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/layout/bounds_tests_title": "Bounds Tests",
+  "strings/layout/centered_faded_title": "Centered Content / Faded Title",
+  "strings/layout/corner_bl": "BL",
+  "strings/layout/corner_br": "BR",
+  "strings/layout/corner_tl": "TL",
+  "strings/layout/corner_tr": "TR",
+  "strings/layout/empty_page": {
+   "v": "Empty Page",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/layout/empty_page_title": "Empty Page",
+  "strings/layout/empty_row": "Empty Row",
+  "strings/layout/hello": {
+   "v": "Hello",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/layout/layout_tests": "Layout Tests",
+  "strings/layout/long_row_test": "Long Row Test",
+  "strings/layout/look_a_subtitle": "Look - a subtitle!",
+  "strings/layout/max_height_test": "MaxHeightTest SecondLine",
+  "strings/layout/max_width_test": "MaxWidthTest",
+  "strings/layout/row_with_no_title": {
+   "v": "Row-With-No-Title Test",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/layout/subtitle_only": "Subtitle only!",
+  "strings/layout/testing_centered": "Testing Centered Title/Content",
+  "strings/nav/browse": {
+   "v": "Browse",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/close": {
+   "v": "Close",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/done": {
+   "v": "Done",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/even_more_tests": "Even More Tests",
+  "strings/nav/few_more_tests": "A Few More Tests",
+  "strings/nav/more_tests": "More Tests",
+  "strings/nav/replace": {
+   "v": "Replace",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/slow_browse": {
+   "v": "Slow Browse",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/slow_replace": {
+   "v": "Slow Replace",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/some_tests": "Some Tests",
+  "strings/nav/test": {
+   "v": "Test",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/test_root_title": "Test Root",
+  "strings/nav/test_three": {
+   "v": "Test 3",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/test_two": {
+   "v": "Test 2",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/nav/test_two_title": "Test 2",
+  "strings/web/came_from_web": "This page came from a web {method} request.",
+  "strings/web/web_get": {
+   "v": "Web GET",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/web/web_post": {
+   "v": "Web POST",
+   "w": {
+    "mc": 12
+   }
+  },
+  "strings/web/web_test": "Web Test"
+ }
+}

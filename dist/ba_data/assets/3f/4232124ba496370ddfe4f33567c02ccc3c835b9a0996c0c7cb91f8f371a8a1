@@ -1,0 +1,330 @@
+{
+ "components": {
+  "duration/days": "{amount}d",
+  "duration/hours": "{amount}h",
+  "duration/minutes": "{amount}m",
+  "duration/seconds": "{amount}s",
+  "duration/years": "{amount}y"
+ },
+ "strings": {
+  "strings/account/must_sign_in": "You must sign in to do this.",
+  "strings/account/not_using_account": {
+   "v": "Note: Ignoring that {service} account. Go to 'Account -> Sign in' if you want to use it.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/account/sign_in_error": "Error signing in.",
+  "strings/account/updating_account": "Updating your account...",
+  "strings/account/you_got_item": "You got a {item}!",
+  "strings/assets/access_denied_guidance": {
+   "v": "{detail} Remove these mods/changes and try again.",
+   "w": {
+    "mc": 50
+   }
+  },
+  "strings/assets/all_assets_requested_quality": "All assets are now full quality.",
+  "strings/assets/authenticating": "Authenticating…",
+  "strings/assets/building_assets": {
+   "a": "count",
+   "f": {
+    "one": "Building assets (# remaining)…",
+    "other": "Building assets (# remaining)…"
+   },
+   "t": "p"
+  },
+  "strings/assets/building_assets_no_count": "Building assets…",
+  "strings/assets/client_too_old": {
+   "v": "This app version is too old to load current assets. Please update to continue.",
+   "w": {
+    "mn": 3
+   }
+  },
+  "strings/assets/content_error_guidance": {
+   "v": "{detail} Fix the file in the source Workspace and try again.",
+   "w": {
+    "mc": 50
+   }
+  },
+  "strings/assets/corrupt_file": "Corrupt file(s) detected. Please try re-installing, or email {email}",
+  "strings/assets/downloading_assets": {
+   "a": "count",
+   "f": {
+    "one": "Downloading assets (# remaining)…",
+    "other": "Downloading assets (# remaining)…"
+   },
+   "t": "p"
+  },
+  "strings/assets/load_error": {
+   "v": "An error occurred loading assets; see log for details.",
+   "w": {
+    "mn": 2
+   }
+  },
+  "strings/assets/preparing_build": "Preparing to build assets…",
+  "strings/assets/requested_quality_assets_building": "Assets are still building; some may appear with reduced quality.",
+  "strings/assets/sign_in_failed": {
+   "v": "You must sign in to an account with access to these assets to continue. Retry to sign in, or remove these mods/changes.",
+   "w": {
+    "mn": 3
+   }
+  },
+  "strings/assets/sign_in_needed_browser": {
+   "v": "Sign-in is required to load these assets. Press the button below, or visit {address}",
+   "w": {
+    "mn": 3
+   }
+  },
+  "strings/assets/sign_in_needed_other_device": {
+   "v": "Sign-in is required to load these assets. On another device, visit {address}",
+   "w": {
+    "mn": 3
+   }
+  },
+  "strings/assets/signing_in": "Signing in…",
+  "strings/audio/music_play_error": "Error playing music: {music}",
+  "strings/device/thermal_frame_rate_cap": "Device is running hot; reducing frame rate until it cools. Configure this in graphics settings.",
+  "strings/input/axis": "axis {number}",
+  "strings/input/button": "button {number}",
+  "strings/input/controller_connected": "{controller} connected.",
+  "strings/input/controller_detected": "1 game controller detected.",
+  "strings/input/controller_disconnected": "{controller} disconnected.",
+  "strings/input/controller_menus_only": "This game controller can not be used to play; only to navigate menus.",
+  "strings/input/controller_reconnected": "{controller} reconnected.",
+  "strings/input/controllers_connected": {
+   "a": "count",
+   "f": {
+    "one": "# game controller connected.",
+    "other": "# game controllers connected."
+   },
+   "t": "p"
+  },
+  "strings/input/controllers_detected": {
+   "a": "count",
+   "f": {
+    "one": "# game controller detected.",
+    "other": "# game controllers detected."
+   },
+   "t": "p"
+  },
+  "strings/input/controllers_disconnected": {
+   "a": "count",
+   "f": {
+    "one": "# game controller disconnected.",
+    "other": "# game controllers disconnected."
+   },
+   "t": "p"
+  },
+  "strings/input/keyboard": "Keyboard",
+  "strings/input/touch_screen": "TouchScreen",
+  "strings/input/touch_screen_join_warning": {
+   "v": "You have joined with the touchscreen. If this was a mistake, tap Menu -> Leave Game with it to back out.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/input/unsupported_controller": "Sorry, the game controller {name} is not supported.",
+  "strings/input/vr_orientation_reset": "VR orientation reset.",
+  "strings/input/vr_orientation_reset_cardboard": {
+   "v": "Use this to reset the VR orientation.\nTo play the game you'll need an external game controller.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/net/account_rejected": "Your account was rejected. Are you signed in?",
+  "strings/net/asset_package_access_denied": "This game uses asset package '{package}' by {owner}, which your account does not have access to.",
+  "strings/net/asset_package_auth_required": "This game uses asset package '{package}' by {owner}, which needs you to be signed in with an account that has access to it.",
+  "strings/net/auth_error": "An error has occurred.",
+  "strings/net/connected_to_game": "Joined '{name}'",
+  "strings/net/connected_to_party": "Joined {name}'s party!",
+  "strings/net/connecting": "Connecting...",
+  "strings/net/connection_failed": "Connection failed.",
+  "strings/net/connection_failed_host_in_other_party": "Connection failed; host is in another party.",
+  "strings/net/connection_failed_party_full": "Connection failed; the party is full.",
+  "strings/net/connection_failed_version_mismatch": "Connection failed; host is running a different version of the game. Make sure you are both up-to-date and try again.",
+  "strings/net/connection_rejected": "Connection rejected.",
+  "strings/net/device_time_incorrect": {
+   "v": "Your device's time is incorrect by {hours} hours. This is likely to cause problems. Please check your time and time-zone settings.",
+   "w": {
+    "mn": 3,
+    "mx": 3
+   }
+  },
+  "strings/net/host_legacy_profiles_only": "This server is old or has v2-auth turned off; only legacy profiles are available.",
+  "strings/net/incompatible_newer_version_host": "Host is running a newer version. Update your game and try again.",
+  "strings/net/incompatible_version_host": "Host is running a different version of the game. Make sure you are both up-to-date and try again.",
+  "strings/net/incompatible_version_player": "{name} is running a different version of the game. Make sure you are both up-to-date and try again.",
+  "strings/net/incorrect_password": "Incorrect password.",
+  "strings/net/invalid_address": "Error: invalid address.",
+  "strings/net/left_game": "Left '{name}'.",
+  "strings/net/left_party": "Left {name}'s party.",
+  "strings/net/player_joined_party": "{name} joined the party!",
+  "strings/net/player_left_party": "{name} left the party.",
+  "strings/net/secure_connection_failed": "Unable to establish secure cloud connection; network functionality may fail.",
+  "strings/net/server_unsupported": "Server functionality is no longer supported in this version of the game; Please update to a newer version.",
+  "strings/net/unavailable_no_connection": {
+   "v": "This is currently unavailable (no internet connection?)",
+   "w": {
+    "mn": 2
+   }
+  },
+  "strings/plugins/class_load_error": "Error loading plugin class '{plugin}': {error}",
+  "strings/plugins/detected": "New plugin(s) detected. Restart to activate them, or configure them in settings.",
+  "strings/plugins/init_error": "Error initializing plugin {plugin}: {error}",
+  "strings/plugins/removed": {
+   "a": "count",
+   "f": {
+    "one": "# plugin no longer found.",
+    "other": "# plugins no longer found."
+   },
+   "t": "p"
+  },
+  "strings/replay/read_error": "Error reading replay file.",
+  "strings/replay/version_error": {
+   "v": "Sorry, this replay was made in a different version of the game and can't be used.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/scripts/module_needs_update": "The module at {path} must be updated for API version {api}.",
+  "strings/scripts/modules_need_update": {
+   "a": "count",
+   "f": {
+    "one": "{path} and # other module must be updated for API {api}",
+    "other": "{path} and # other modules must be updated for API {api}"
+   },
+   "t": "p"
+  },
+  "strings/scripts/scan_error": "Error(s) scanning scripts. See log for details.",
+  "strings/session/chat_blocked": {
+   "a": "seconds",
+   "f": {
+    "one": "{name} is chat-blocked for # second.",
+    "other": "{name} is chat-blocked for # seconds."
+   },
+   "t": "p"
+  },
+  "strings/session/chat_message_too_long": "Message is too long.",
+  "strings/session/join_cooldown": {
+   "a": "seconds",
+   "f": {
+    "one": "You can join in # second.",
+    "other": "You can join in # seconds."
+   },
+   "t": "p"
+  },
+  "strings/session/kick_idle_kicked": "Kicking {name} for being idle.",
+  "strings/session/kick_idle_warning": {
+   "a": "seconds",
+   "f": {
+    "one": "{name} will be kicked in # second if still idle.",
+    "other": "{name} will be kicked in # seconds if still idle."
+   },
+   "t": "p"
+  },
+  "strings/session/kick_idle_warning_settings": "(you can turn this off in Settings -> Advanced)",
+  "strings/session/kick_occurred": "{name} was kicked.",
+  "strings/session/kick_question": "Kick {name}?",
+  "strings/session/kick_vote_cant_kick_admins": "Admins can't be kicked.",
+  "strings/session/kick_vote_cant_kick_self": "You can't kick yourself.",
+  "strings/session/kick_vote_failed": "Kick-vote failed.",
+  "strings/session/kick_vote_not_enough_players": "Not enough players for a vote.",
+  "strings/session/kick_vote_started": "A kick vote has been started for {name}.",
+  "strings/session/kick_votes_needed": {
+   "a": "count",
+   "f": {
+    "one": "# vote needed",
+    "other": "# votes needed"
+   },
+   "t": "p"
+  },
+  "strings/session/kick_voting_disabled": "Kick voting is disabled.",
+  "strings/session/kick_with_chat": "Type {yes} in chat for yes and {no} for no.",
+  "strings/session/loading_try_again": "Loading; try again in a moment...",
+  "strings/session/vote_delay": {
+   "a": "seconds",
+   "f": {
+    "one": "You can't start another vote for # second.",
+    "other": "You can't start another vote for # seconds."
+   },
+   "t": "p"
+  },
+  "strings/session/vote_in_progress": "A vote is already in progress.",
+  "strings/session/voted_already": "You already voted",
+  "strings/store/google_play_purchases_unavailable": {
+   "v": "Google Play purchases are not available. You may need to update your store app.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/store/google_play_services_unavailable": {
+   "v": "Google Play Services is not available. Some app functionality may be disabled.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/store/payment_pending_message": "Your purchase will be delivered once payment is confirmed.",
+  "strings/store/payment_pending_title": "Payment Pending",
+  "strings/store/purchase_already_in_progress": "A purchase of this item is already in progress.",
+  "strings/store/purchase_not_valid": {
+   "v": "Purchase not valid. Contact {email} if this is an error.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/store/purchases_restored": "Purchases restored.",
+  "strings/store/purchasing": "Purchasing...",
+  "strings/store/remove_ads_token_offer": "LIMITED TIME OFFER: PURCHASE ANY TOKEN PACK TO REMOVE IN-GAME ADS.",
+  "strings/store/requesting": "Requesting...",
+  "strings/store/transaction_in_progress": "A transaction is in progress; please try again in a moment.",
+  "strings/store/unavailable": "Sorry, this is not available.",
+  "strings/store/unavailable_temporarily": "This is currently unavailable; please try again later.",
+  "strings/time/duration_value": {
+   "k": {
+    "t": "millis"
+   },
+   "v": "{t}"
+  },
+  "strings/time/suffix_hours": "{count}h",
+  "strings/time/suffix_minutes": "{count}m",
+  "strings/time/suffix_seconds": "{count}s",
+  "strings/ui/arrows_to_exit_list": "press {left} or {right} to exit list",
+  "strings/ui/cancel": "Cancel",
+  "strings/ui/clipboard_not_supported": "Clipboard not supported on this build.",
+  "strings/ui/copied_to_clipboard": "Copied to clipboard.",
+  "strings/ui/error": "Error",
+  "strings/ui/game_center": "Game Center",
+  "strings/ui/google_play": "Google Play",
+  "strings/ui/has_menu_control": "{name} has menu control.",
+  "strings/ui/menu_control_time_out": {
+   "a": "seconds",
+   "f": {
+    "one": "(times out in # second)",
+    "other": "(times out in # seconds)"
+   },
+   "t": "p"
+  },
+  "strings/ui/menu_control_will_time_out": "(will time out if idle)",
+  "strings/ui/ok": "OK",
+  "strings/ui/open_me": "Open Me!",
+  "strings/ui/remote_app_name": "BombSquad Remote",
+  "strings/ui/retry": "Retry",
+  "strings/ui/sign_in": "Sign In",
+  "strings/ui/spaced_pair": "{first} {second}",
+  "strings/ui/storage_permission_needed": "This requires storage access",
+  "strings/ui/success": "Success!",
+  "strings/ui/unknown_error": "Unknown error",
+  "strings/ui/update_available": "A newer version of this app is available.",
+  "strings/ui/updating": "Updating…",
+  "strings/workspace/activated": "Workspace {thing} activated.",
+  "strings/workspace/sync_error": "Error syncing Workspace {workspace}. See log for details.",
+  "strings/workspace/sync_reuse": "Can't sync Workspace '{workspace}'. Reusing previously synced version."
+ }
+}

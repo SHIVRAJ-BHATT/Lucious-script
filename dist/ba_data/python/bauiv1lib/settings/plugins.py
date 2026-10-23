@@ -1,0 +1,518 @@
+# Released under the MIT License. See LICENSE for details.
+#
+"""Plugin Window UI."""
+
+from enum import Enum
+from typing import TYPE_CHECKING, assert_never, override
+
+import bauiv1 as bui
+from bauiv1 import _builtinassets
+from bauiv1 import _commonassets, _classicassets
+
+from bauiv1lib import popup
+from bauiv1lib.utils import apply_toolbar_scroll_fades, get_screen_margins
+
+if TYPE_CHECKING:
+    pass
+
+
+_plgstrs = _classicassets.strings.settings.plugins
+
+
+class Category(Enum):
+    """Categories we can display."""
+
+    ALL = 'all'
+    ENABLED = 'enabled'
+    DISABLED = 'disabled'
+
+    @property
+    def display(self) -> bui.LangStr:
+        """Display string for us."""
+        cls = type(self)
+        if self is cls.ALL:
+            return _commonassets.strings.values.all
+        if self is cls.ENABLED:
+            return _commonassets.strings.values.enabled
+        assert self is cls.DISABLED
+        return _commonassets.strings.values.disabled
+
+
+class PluginWindow(bui.MainWindow):
+    """Window for configuring plugins."""
+
+    def __init__(
+        self,
+        transition: str | None = 'in_right',
+        origin_widget: bui.Widget | None = None,
+    ):
+        app = bui.app
+
+        self._category = Category.ALL
+
+        assert bui.app.classic is not None
+        uiscale = bui.app.ui_v1.uiscale
+        self._width = 1200.0 if uiscale is bui.UIScale.SMALL else 670.0
+        self._height = (
+            900.0
+            if uiscale is bui.UIScale.SMALL
+            else 520.0 if uiscale is bui.UIScale.MEDIUM else 700.0
+        )
+
+        # Do some fancy math to fill all available screen area up to the
+        # size of our backing container. This lets us fit to the exact
+        # screen shape at small ui scale.
+        screensize = bui.get_virtual_screen_size()
+        scale = (
+            1.7
+            if uiscale is bui.UIScale.SMALL
+            else 0.94 if uiscale is bui.UIScale.MEDIUM else 0.63
+        )
+        # Calc screen size in our local container space and clamp to a
+        # bit smaller than our container size.
+        target_width = min(self._width - 80, screensize[0] / scale)
+        target_height = min(self._height - 80, screensize[1] / scale)
+
+        # To get top/left coords, go to the center of our window and
+        # offset by half the width/height of our target area.
+        yoffs = 0.5 * self._height + 0.5 * target_height + 20.0
+
+        self._scroll_width = target_width
+        self._scroll_height = target_height - 40
+        self._scroll_bottom = yoffs - 64 - self._scroll_height
+
+        # In small ui we extend our scrollable area out into the side
+        # screen margins (space between the virtual bounds and the
+        # actual screen edges) while keeping content laid out within the
+        # virtual bounds.
+        self._margin_left, self._margin_right, _, _ = (
+            get_screen_margins(scale)
+            if uiscale is bui.UIScale.SMALL
+            else (0.0, 0.0, 0.0, 0.0)
+        )
+
+        # In small ui we also extend the scroll's top edge all the way
+        # up to the top of the virtual bounds; a fade then keeps our
+        # title and toolbar buttons legible over any content scrolled
+        # up there.
+        top_extend = (
+            (0.5 * self._height + 0.5 * (screensize[1] / scale))
+            - (self._scroll_bottom + self._scroll_height)
+            if uiscale is bui.UIScale.SMALL
+            else 0.0
+        )
+
+        # Generous padding above our content so the first plugin row
+        # stays clear of the fade and the large back button when
+        # scrolled to the top.
+        top_pad = 35.0 if uiscale is bui.UIScale.SMALL else 0.0
+
+        # Indent plugin rows a bit in small ui so they don't hug the
+        # left screen edge (rows shrink to match so settings buttons
+        # on the right are unaffected).
+        self._row_indent = 25.0 if uiscale is bui.UIScale.SMALL else 0.0
+
+        # Total dead space above our content within the subcontainer
+        # (used by our layout code).
+        self._content_top_offs = top_extend + top_pad
+
+        super().__init__(
+            root_widget=bui.containerwidget(
+                size=(self._width, self._height),
+                toolbar_visibility=(
+                    'menu_minimal'
+                    if uiscale is bui.UIScale.SMALL
+                    else 'menu_full'
+                ),
+                scale=scale,
+            ),
+            transition=transition,
+            origin_widget=origin_widget,
+            # We're affected by screen size only at small ui-scale.
+            refresh_on_screen_size_changes=uiscale is bui.UIScale.SMALL,
+        )
+
+        self._sub_width = self._scroll_width * 0.95
+        self._sub_height = 724.0
+
+        assert app.classic is not None
+        if uiscale is bui.UIScale.SMALL:
+            bui.containerwidget(
+                edit=self._root_widget, on_cancel_call=self.main_window_back
+            )
+            self._back_button = None
+        else:
+            self._back_button = bui.buttonwidget(
+                parent=self._root_widget,
+                id=f'{self.main_window_id_prefix}|back',
+                position=(53, yoffs - 49),
+                size=(60, 60),
+                scale=0.8,
+                autoselect=True,
+                label=bui.SpecialChar.BACK.value,
+                button_type='backSmall',
+                on_activate_call=self.main_window_back,
+            )
+            bui.containerwidget(
+                edit=self._root_widget, cancel_button=self._back_button
+            )
+
+        self._scrollwidget = bui.scrollwidget(
+            parent=self._root_widget,
+            size=(
+                self._scroll_width + self._margin_left + self._margin_right,
+                self._scroll_height + top_extend,
+            ),
+            position=(
+                self._width * 0.5
+                - self._scroll_width * 0.5
+                - self._margin_left,
+                self._scroll_bottom,
+            ),
+            simple_culling_v=20.0,
+            highlight=False,
+            selection_loops_to_parent=True,
+            claims_left_right=True,
+            border_opacity=0.4,
+            fading_scrollbar=True,
+        )
+        bui.widget(edit=self._scrollwidget, right_widget=self._scrollwidget)
+
+        # Our scroll area extends up past our title; fade content out
+        # toward the top so the title and toolbar buttons, drawn after
+        # the scroll area, stay legible over anything scrolled up there.
+        if uiscale is bui.UIScale.SMALL:
+            apply_toolbar_scroll_fades(self._scrollwidget, bottom_fade=0.0)
+
+        self._title_text = bui.textwidget(
+            parent=self._root_widget,
+            position=(
+                self._width * 0.5,
+                yoffs - (42 if uiscale is bui.UIScale.SMALL else 30),
+            ),
+            size=(0, 0),
+            text=_plgstrs.title,
+            color=app.ui_v1.title_color,
+            maxwidth=140,
+            h_align='center',
+            v_align='center',
+        )
+
+        settings_button_x = self._width * 0.5 + self._scroll_width * 0.5 - 40
+        if uiscale is bui.UIScale.SMALL:
+            # In small UI there's stuff top right we need to avoid.
+            if bui.in_main_menu():
+                # Squads button
+                settings_button_x -= 65
+            else:
+                # Squads and settings buttons
+                settings_button_x -= 115
+
+        button_row_yoffs = yoffs + (-2 if uiscale is bui.UIScale.SMALL else 10)
+
+        self._num_plugins_text = bui.textwidget(
+            parent=self._root_widget,
+            position=(settings_button_x - 130, button_row_yoffs - 41),
+            size=(0, 0),
+            text='',
+            h_align='center',
+            v_align='center',
+        )
+
+        self._category_button = bui.buttonwidget(
+            parent=self._root_widget,
+            id=f'{self.main_window_id_prefix}|category',
+            scale=0.7,
+            position=(settings_button_x - 105, button_row_yoffs - 60),
+            size=(130, 60),
+            label=_commonassets.strings.values.all,
+            autoselect=True,
+            on_activate_call=bui.WeakCallStrict(self._show_category_options),
+            color=(0.55, 0.73, 0.25),
+            iconscale=1.2,
+        )
+        # Explicitly slot our opaque parts in front of our scroll area's
+        # fade (all children of a container share a single depth slice, so
+        # creation order alone doesn't do it).
+        bui.widget(edit=self._category_button, depth_range=(0.95, 1.0))
+
+        self._settings_button = bui.buttonwidget(
+            parent=self._root_widget,
+            id=f'{self.main_window_id_prefix}|settings',
+            position=(settings_button_x, button_row_yoffs - 58),
+            size=(40, 40),
+            label='',
+            on_activate_call=self._open_settings,
+        )
+        bui.widget(edit=self._settings_button, depth_range=(0.95, 1.0))
+
+        gearimg = bui.imagewidget(
+            parent=self._root_widget,
+            position=(settings_button_x + 3, button_row_yoffs - 57),
+            draw_controller=self._settings_button,
+            size=(35, 35),
+            texture=_classicassets.textures.settings_icon.get(),
+        )
+        bui.widget(edit=gearimg, depth_range=(0.95, 1.0))
+
+        bui.widget(
+            edit=self._settings_button,
+            up_widget=self._settings_button,
+            right_widget=self._settings_button,
+        )
+
+        self._no_plugins_installed_text = bui.textwidget(
+            parent=self._root_widget,
+            position=(self._width * 0.5, self._height * 0.5),
+            size=(0, 0),
+            text='',
+            color=(0.6, 0.6, 0.6),
+            scale=0.8,
+            h_align='center',
+            v_align='center',
+        )
+
+        if bui.app.meta.scanresults is None:
+            bui.screenmessage(
+                'Still scanning plugins; please try again.', color=(1, 0, 0)
+            )
+            _builtinassets.audio.error.get().play()
+        plugspecs = bui.app.plugins.plugin_specs
+        plugstates: dict[str, dict] = bui.app.config.get('Plugins', {})
+        assert isinstance(plugstates, dict)
+
+        plug_line_height = 50.0
+        sub_width = self._scroll_width + self._margin_left + self._margin_right
+        sub_height = len(plugspecs) * plug_line_height + self._content_top_offs
+        self._subcontainer = bui.containerwidget(
+            parent=self._scrollwidget,
+            id=f'{self.main_window_id_prefix}|subc',
+            size=(sub_width, sub_height),
+            background=False,
+        )
+        self._show_plugins()
+        bui.containerwidget(
+            edit=self._root_widget, selected_child=self._scrollwidget
+        )
+
+    @override
+    def get_main_window_state(self) -> bui.MainWindowState:
+        # Support recreating our window for back/refresh purposes.
+        cls = type(self)
+        return bui.BasicMainWindowState(
+            create_call=lambda transition, origin_widget: cls(
+                transition=transition, origin_widget=origin_widget
+            )
+        )
+
+    @override
+    def main_window_should_preserve_selection(self) -> bool:
+        return True
+
+    def _check_value_changed(self, plug: bui.PluginSpec, value: bool) -> None:
+        bui.screenmessage(
+            _commonassets.strings.status.must_restart,
+            color=(1.0, 0.5, 0.0),
+        )
+        plugstates: dict[str, dict] = bui.app.config.setdefault('Plugins', {})
+        assert isinstance(plugstates, dict)
+        plugstate = plugstates.setdefault(plug.class_path, {})
+        plugstate['enabled'] = value
+        bui.app.config.commit()
+
+    def _open_settings(self) -> None:
+        # pylint: disable=cyclic-import
+        from bauiv1lib.settings.pluginsettings import PluginSettingsWindow
+
+        self.main_window_replace(
+            lambda: PluginSettingsWindow(transition='in_right')
+        )
+
+    def _show_category_options(self) -> None:
+        uiscale = bui.app.ui_v1.uiscale
+
+        popup.PopupMenuWindow(
+            position=self._category_button.get_screen_space_center(),
+            scale=(
+                2.3
+                if uiscale is bui.UIScale.SMALL
+                else 1.65 if uiscale is bui.UIScale.MEDIUM else 1.23
+            ),
+            choices=[c.value for c in Category],
+            choices_display=[c.display for c in Category],
+            current_choice=self._category.value,
+            delegate=self,
+        )
+
+    def popup_menu_selected_choice(
+        self, popup_window: popup.PopupMenuWindow, choice: str
+    ) -> None:
+        """Called when a choice is selected in the popup."""
+        del popup_window  # unused
+        self._category = Category(choice)
+        self._clear_scroll_widget()
+        self._show_plugins()
+
+        bui.buttonwidget(
+            edit=self._category_button,
+            label=self._category.display,
+        )
+
+    def popup_menu_closing(self, popup_window: popup.PopupWindow) -> None:
+        """Called when the popup is closing."""
+
+    def _clear_scroll_widget(self) -> None:
+        existing_widgets = self._subcontainer.get_children()
+        if existing_widgets:
+            for i in existing_widgets:
+                i.delete()
+
+    def _show_plugins(self) -> None:
+        # pylint: disable=too-many-branches
+        plugspecs = bui.app.plugins.plugin_specs
+        plugstates: dict[str, dict] = bui.app.config.setdefault('Plugins', {})
+        assert isinstance(plugstates, dict)
+
+        plug_line_height = 50.0
+        sub_width = self._scroll_width
+        num_enabled = 0
+        num_disabled = 0
+
+        plugspecs_sorted = sorted(plugspecs.items())
+
+        bui.textwidget(
+            edit=self._no_plugins_installed_text,
+            text='',
+        )
+
+        for _classpath, plugspec in plugspecs_sorted:
+            # counting number of enabled and disabled plugins
+            # plugstate = plugstates.setdefault(plugspec[0], {})
+            if plugspec.enabled:
+                num_enabled += 1
+            else:
+                num_disabled += 1
+
+        if self._category is Category.ALL:
+            sub_height = len(plugspecs) * plug_line_height
+        elif self._category is Category.ENABLED:
+            sub_height = num_enabled * plug_line_height
+        elif self._category is Category.DISABLED:
+            sub_height = num_disabled * plug_line_height
+        else:
+            # Make sure we handle all cases.
+            assert_never(self._category)
+
+        # Add the padding above our content (keeping it clear of our
+        # top fade and buttons).
+        sub_height += self._content_top_offs
+        bui.containerwidget(
+            edit=self._subcontainer,
+            size=(
+                self._scroll_width + self._margin_left + self._margin_right,
+                sub_height,
+            ),
+        )
+
+        num_shown = 0
+        for classpath, plugspec in plugspecs_sorted:
+            plugin = plugspec.plugin
+            enabled = plugspec.enabled
+
+            if self._category is Category.ALL:
+                show = True
+            elif self._category is Category.ENABLED:
+                show = enabled
+            elif self._category is Category.DISABLED:
+                show = not enabled
+            else:
+                assert_never(self._category)
+
+            if not show:
+                continue
+
+            item_y = (
+                sub_height
+                - self._content_top_offs
+                - (num_shown + 1) * plug_line_height
+            )
+            check = bui.checkboxwidget(
+                parent=self._subcontainer,
+                id=f'{self.main_window_id_prefix}|enabled.{classpath}',
+                text=classpath,
+                autoselect=True,
+                value=enabled,
+                maxwidth=self._scroll_width
+                - self._row_indent
+                - (
+                    200
+                    if plugin is not None and plugin.has_settings_ui()
+                    else 80
+                ),
+                position=(
+                    10 + self._margin_left + self._row_indent,
+                    item_y,
+                ),
+                size=(self._scroll_width - 40 - self._row_indent, 50),
+                on_value_change_call=bui.CallPartial(
+                    self._check_value_changed, plugspec
+                ),
+                textcolor=(
+                    (0.8, 0.3, 0.3)
+                    if (plugspec.attempted_load and plugspec.plugin is None)
+                    else (
+                        (0.6, 0.6, 0.6)
+                        if plugspec.plugin is None
+                        else (0, 1, 0)
+                    )
+                ),
+            )
+            if plugin is not None and plugin.has_settings_ui():
+                button = bui.buttonwidget(
+                    parent=self._subcontainer,
+                    id=f'{self.main_window_id_prefix}|settings.{classpath}',
+                    label=_classicassets.strings.settings.title,
+                    autoselect=True,
+                    size=(100, 40),
+                    position=(
+                        self._margin_left + sub_width - 130,
+                        item_y + 6,
+                    ),
+                )
+                bui.buttonwidget(
+                    edit=button,
+                    on_activate_call=bui.CallStrict(
+                        plugin.show_settings_ui, button
+                    ),
+                )
+            else:
+                button = None
+
+            # Allow getting back to back button.
+            if num_shown == 0:
+                bui.widget(
+                    edit=check,
+                    up_widget=self._back_button,
+                    left_widget=self._back_button,
+                    right_widget=(
+                        self._settings_button if button is None else button
+                    ),
+                )
+                if button is not None:
+                    bui.widget(edit=button, up_widget=self._back_button)
+
+            # Make sure we scroll all the way to the end when using
+            # keyboard/button nav.
+            bui.widget(edit=check, show_buffer_top=40, show_buffer_bottom=40)
+            num_shown += 1
+
+        bui.textwidget(
+            edit=self._num_plugins_text,
+            text=str(num_shown),
+        )
+
+        if num_shown == 0:
+            bui.textwidget(
+                edit=self._no_plugins_installed_text,
+                text=_plgstrs.none_installed,
+            )

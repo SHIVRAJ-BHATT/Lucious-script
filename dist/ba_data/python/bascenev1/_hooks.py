@@ -1,0 +1,67 @@
+# Released under the MIT License. See LICENSE for details.
+#
+"""Snippets of code for use by the c++ layer."""
+
+# (most of these are self-explanatory)
+# pylint: disable=missing-function-docstring
+
+from typing import TYPE_CHECKING
+
+import babase
+
+import _bascenev1
+from bascenev1._assetref import texture_from_ref
+
+if TYPE_CHECKING:
+    from typing import Any
+
+    import bascenev1
+
+
+def launch_main_menu_session() -> None:
+    assert babase.app.classic is not None
+
+    _bascenev1.new_host_session(babase.app.classic.get_main_menu_session())
+
+
+def _icon_texture(ref: str) -> bascenev1.Texture:
+    # Our own icons are qualified refs; a mod's set_icon_info() may
+    # still pass a legacy texture name, which loads through the same
+    # legacy-name path as bs.gettexture() rather than failing.
+    if ':' in ref:
+        return texture_from_ref(ref)
+    return _bascenev1.gettexture(ref)
+
+
+def get_player_icon(sessionplayer: bascenev1.SessionPlayer) -> dict[str, Any]:
+    info = sessionplayer.get_icon_info()
+    return {
+        'texture': _icon_texture(info['texture']),
+        'tint_texture': _icon_texture(info['tint_texture']),
+        'tint_color': info['tint_color'],
+        'tint2_color': info['tint2_color'],
+        'tint3_color': info.get('tint3_color', (1.0, 1.0, 1.0)),
+    }
+
+
+def filter_chat_message(msg: str, client_id: int) -> str | None:
+    """Intercept/filter chat messages.
+
+    Called for all chat messages while hosting.
+    Messages originating from the host will have clientID -1.
+    Should filter and return the string to be displayed, or return None
+    to ignore the message.
+    """
+    del client_id  # Unused by default.
+    return msg
+
+
+def local_chat_message(msg: str) -> None:
+    classic = babase.app.classic
+    assert classic is not None
+    party_window = (
+        None if classic.party_window is None else classic.party_window()
+    )
+
+    if party_window is not None:
+        party_window.on_chat_message(msg)

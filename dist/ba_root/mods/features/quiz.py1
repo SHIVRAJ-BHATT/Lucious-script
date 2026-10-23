@@ -1,0 +1,447 @@
+# Released under the MIT License. See LICENSE for details.
+# ba_meta require api 9
+# Owner/Editor: Lucifer
+"""Automatic chat trivia quiz with safe V2-only coin rewards for API 9."""
+
+from __future__ import annotations
+
+import logging
+import random
+import re
+import threading
+import time
+from typing import Any
+
+import babase
+import bascenev1 as bs
+
+# ============================================================================
+# QUIZ ANNOUNCEMENT TEXT - EDIT MESSAGES HERE
+# Runtime controls (enable, timing, reward, and announcer name) are read only
+# from mods/setting.json -> quiz. Do not duplicate those controls here.
+# Use Unicode escape sequences for BombSquad private-use glyphs.
+# Supported placeholders: {question}, {answer}, {winner}, {reward}, {balance}.
+# ============================================================================
+QUIZ_MESSAGES: dict[str, str] = {
+    "question": "\ue047  {question}",
+    "timeout": "\ue044  Time is up! The correct answer was: {answer}. \ue045",
+    "correct_title": "\ue04c  CORRECT ANSWER!  \ue04d",
+    "winner": "\ue047  {winner} won {reward} coins!",
+    "balance": "\ue048  New balance: {balance} coins.",
+}
+
+_LOG = logging.getLogger("Lucifer.Quiz")
+_LOCK = threading.RLock()
+_CONFIG_LOCK = threading.Lock()
+_CONFIG_CACHE: dict[str, Any] | None = None
+_CONFIG_CACHE_AT = 0.0
+_CONFIG_CACHE_TTL = 1.0
+_STARTED = False
+_CURRENT_QUESTION: dict[str, Any] | None = None
+_QUESTION_SEQUENCE = 0
+_LAST_QUESTION_INDEX: int | None = None
+
+_ANSWER_PATTERN = re.compile(r"[^a-z0-9]+")
+
+# Each item is (question text, canonical answer, accepted answer variants).
+# Keep answers short and unambiguous because players type them in public chat.
+_QUESTIONS: list[tuple[str, str, tuple[str, ...]]] = [
+    ("What is the capital of France?", "Paris", ("paris",)),
+    ("Which planet is known as the Red Planet?", "Mars", ("mars",)),
+    ("What is the largest planet in our Solar System?", "Jupiter", ("jupiter",)),
+    ("What is the chemical formula of water?", "H2O", ("h2o", "h 2 o")),
+    ("How many sides does a hexagon have?", "6", ("6", "six")),
+    ("What is 7 x 8?", "56", ("56", "fifty six", "fifty-six")),
+    ("What is the currency of Japan?", "Yen", ("yen",)),
+    ("What is the largest mammal on Earth?", "Blue whale", ("blue whale",)),
+    ("Which animal is the fastest on land?", "Cheetah", ("cheetah",)),
+    ("What is the capital of India?", "New Delhi", ("new delhi", "delhi")),
+    ("Which star is closest to Earth?", "The Sun", ("sun", "the sun")),
+    ("How many colours are traditionally listed in a rainbow?", "7", ("7", "seven")),
+    ("What is the first month of the year?", "January", ("january",)),
+    ("What sweet food do bees make?", "Honey", ("honey",)),
+    ("What is the opposite direction of north?", "South", ("south",)),
+    ("What process lets plants use sunlight to make food?", "Photosynthesis", ("photosynthesis",)),
+    ("How many days are in a leap year?", "366", ("366", "three hundred sixty six", "three hundred and sixty six")),
+    ("Which continent is India in?", "Asia", ("asia",)),
+    ("Who wrote the play Hamlet?", "William Shakespeare", ("william shakespeare", "shakespeare")),
+    ("How many items are in one dozen?", "12", ("12", "twelve")),
+    ("What shape has four equal sides and four right angles?", "Square", ("square",)),
+    ("What type of celestial object is the Sun?", "Star", ("star", "a star")),
+    ("Which planet is famously called the Morning Star?", "Venus", ("venus",)),
+    ("What is 2 to the power of 3?", "8", ("8", "eight")),
+    ("Which gas makes up most of Earth's atmosphere?", "Nitrogen", ("nitrogen",)),
+    ("How many squares are on a standard chessboard?", "64", ("64", "sixty four", "sixty-four")),
+    ("How many minutes are in one hour?", "60", ("60", "sixty")),
+    ("What is the name of the galaxy containing our Solar System?", "Milky Way", ("milky way",)),
+    ("What is the largest ocean on Earth?", "Pacific Ocean", ("pacific", "pacific ocean")),
+    ("What is the main processing component of a computer called?", "CPU", ("cpu", "central processing unit")),
+    ("How many bones are usually in an adult human body?", "206", ("206",)),
+    ("Which sport uses a shuttlecock?", "Badminton", ("badminton",)),
+    ("What is the freezing point of water in Celsius?", "0", ("0", "zero", "0 c", "0 degrees c", "zero celsius")),
+    ("Which language is primarily used to style web pages?", "CSS", ("css", "cascading style sheets")),
+    ("How many players from one team are on a football/soccer field at kickoff?", "11", ("11", "eleven")),
+]
+
+def _load_config() -> dict[str, Any]:
+    """Load runtime quiz controls from setting.json; messages stay in this file."""
+    # These are fail-safe values only, not the user-facing configuration.
+    # A missing/invalid quiz section disables the quiz instead of silently
+    # overriding the values users are expected to maintain in setting.json.
+    result: dict[str, Any] = {
+        "enable": False,
+        "firstQuestionDelaySeconds": 5,
+        "intervalSeconds": 30,
+        "answerWindowSeconds": 10,
+        "rewardCoins": 1,
+        "announcerName": "",
+        "messages": dict(QUIZ_MESSAGES),
+    }
+    try:
+        import setting
+
+        supplied = setting.get_section("quiz")
+        if not isinstance(supplied, dict):
+            _LOG.error("Missing or invalid 'quiz' section in setting.json; quiz disabled.")
+            return result
+
+        required_keys = (
+            "enable",
+            "firstQuestionDelaySeconds",
+            "intervalSeconds",
+            "answerWindowSeconds",
+            "rewardCoins",
+            "announcerName",
+        )
+        missing = [key for key in required_keys if key not in supplied]
+        if missing:
+            _LOG.error(
+                "Missing quiz setting(s) in setting.json: %s; quiz disabled.",
+                ", ".join(missing),
+            )
+            return result
+
+        for key in required_keys:
+            result[key] = supplied[key]
+
+        economy = setting.get_section("economy")
+        if isinstance(economy, dict) and economy.get("enable", True) is False:
+            result["enable"] = False
+    except Exception:
+        _LOG.exception("Could not read quiz settings from setting.json; quiz disabled.")
+        return result
+
+    if not isinstance(result["enable"], bool):
+        _LOG.warning("Invalid quiz setting enable; quiz disabled.")
+        result["enable"] = False
+
+    if not isinstance(result.get("announcerName"), str):
+        _LOG.warning("Invalid quiz setting announcerName; using the default chat sender.")
+        result["announcerName"] = ""
+
+    bounds = {
+        "firstQuestionDelaySeconds": (5, 3600, 5),
+        "intervalSeconds": (30, 86400, 30),
+        "answerWindowSeconds": (10, 120, 10),
+        "rewardCoins": (1, 1000000, 1),
+    }
+    for key, (minimum, maximum, fallback) in bounds.items():
+        value = result.get(key)
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int)
+            or not minimum <= value <= maximum
+        ):
+            _LOG.warning(
+                "Invalid quiz setting %s; using a safe fallback value %s.",
+                key,
+                fallback,
+            )
+            result[key] = fallback
+    return result
+
+
+def _config() -> dict[str, Any]:
+    """Return a validated settings snapshot, cached briefly for chat performance."""
+    global _CONFIG_CACHE, _CONFIG_CACHE_AT
+
+    now = time.monotonic()
+    with _CONFIG_LOCK:
+        if (
+            _CONFIG_CACHE is not None
+            and now - _CONFIG_CACHE_AT < _CONFIG_CACHE_TTL
+        ):
+            return dict(_CONFIG_CACHE)
+
+        loaded = _load_config()
+        _CONFIG_CACHE = loaded
+        _CONFIG_CACHE_AT = now
+        return dict(loaded)
+
+
+def refresh_config_cache() -> dict[str, Any]:
+    """Force a settings reload; useful after runtime settings are changed."""
+    global _CONFIG_CACHE, _CONFIG_CACHE_AT
+    with _CONFIG_LOCK:
+        _CONFIG_CACHE = None
+        _CONFIG_CACHE_AT = 0.0
+    return _config()
+
+
+def _normalise_answer(value: str) -> str:
+    """Compare text case-insensitively and ignore spacing/punctuation."""
+    return _ANSWER_PATTERN.sub("", str(value).casefold())
+
+
+def _broadcast(lines: str) -> None:
+    """Send quiz announcements using the configured chat sender name."""
+    try:
+        announcer = str(_config().get("announcerName", "")).strip() or None
+        for line in str(lines).splitlines():
+            if not line:
+                continue
+            # API 9 sender_override changes the chat sender label instead of
+            # duplicating the host name inside the message body.
+            bs.chatmessage(line, sender_override=announcer)
+    except Exception:
+        _LOG.exception("Could not broadcast a quiz announcement.")
+
+
+def _session_has_players() -> bool:
+    try:
+        session = bs.get_foreground_host_session()
+        if session is None:
+            return False
+        for _player in getattr(session, "sessionplayers", ()):
+            return True
+        return False
+    except Exception:
+        _LOG.exception("Could not determine whether players are online for the quiz.")
+        return False
+
+
+def _schedule(delay: float, callback: Any, *args: Any) -> None:
+    """Schedule a single app-level timer, logging failures instead of raising."""
+    try:
+        babase.apptimer(float(delay), lambda: callback(*args))
+    except Exception:
+        _LOG.exception("Could not schedule the next quiz timer.")
+
+
+def _schedule_next_question(delay: float) -> None:
+    cfg = _config()
+    if not cfg["enable"] or not _STARTED:
+        return
+    _schedule(max(1.0, float(delay)), _ask_question)
+
+
+def _ask_question() -> None:
+    """Select and announce a question, then schedule its timeout."""
+    global _CURRENT_QUESTION, _QUESTION_SEQUENCE, _LAST_QUESTION_INDEX
+    cfg = _config()
+    if not _STARTED or not cfg["enable"]:
+        return
+
+    if not _session_has_players():
+        # No players to answer right now; check again later without chat spam.
+        _schedule_next_question(min(float(cfg["intervalSeconds"]), 60.0))
+        return
+
+    question_count = len(_QUESTIONS)
+    if question_count == 0:
+        _LOG.error("Quiz has no configured questions; scheduling a retry.")
+        _schedule_next_question(min(float(cfg["intervalSeconds"]), 60.0))
+        return
+
+    index = random.randrange(question_count)
+    # Avoid asking the same question twice in a row without allocating a list
+    # of every question index on each quiz cycle.
+    if (
+        _LAST_QUESTION_INDEX is not None
+        and question_count > 1
+        and index == _LAST_QUESTION_INDEX
+    ):
+        index = (index + random.randrange(1, question_count)) % question_count
+    _LAST_QUESTION_INDEX = index
+    question_text, answer, variants = _QUESTIONS[index]
+    accepted = {_normalise_answer(answer)}
+    accepted.update(_normalise_answer(item) for item in variants)
+
+    with _LOCK:
+        _QUESTION_SEQUENCE += 1
+        question_id = _QUESTION_SEQUENCE
+        asked_at = time.monotonic()
+        _CURRENT_QUESTION = {
+            "id": question_id,
+            "question": question_text,
+            "answer": answer,
+            "accepted": accepted,
+            "asked_at": asked_at,
+            "expires_at": asked_at + float(cfg["answerWindowSeconds"]),
+        }
+
+    reward = int(cfg["rewardCoins"])
+    _broadcast(cfg["messages"]["question"].format(question=question_text))
+    _LOG.info("Quiz question %s started; reward=%s coins.", question_id, reward)
+    _schedule(float(cfg["answerWindowSeconds"]), _expire_question, question_id)
+
+
+def _expire_question(question_id: int) -> None:
+    """Close an unanswered question and publish the answer."""
+    global _CURRENT_QUESTION
+    cfg = _config()
+    answer: str | None = None
+    with _LOCK:
+        current = _CURRENT_QUESTION
+        if current is not None and current.get("id") == question_id:
+            answer = str(current.get("answer", ""))
+            _CURRENT_QUESTION = None
+
+    if answer is not None:
+        _broadcast(cfg["messages"]["timeout"].format(answer=answer))
+        _LOG.info("Quiz question %s expired without a winner.", question_id)
+        if cfg["enable"]:
+            _schedule_next_question(float(cfg["intervalSeconds"]) - float(cfg["answerWindowSeconds"]))
+
+
+def _resolve_player(client_id: int) -> tuple[str | None, str]:
+    """Return a verified V2 account ID and a display name for a connected client."""
+    account_id: str | None = None
+    display_name = "Player"
+    try:
+        session = bs.get_foreground_host_session()
+        if session is None:
+            return None, display_name
+        # Keep these imports local to identity resolution and explicitly bind
+        # both helpers before using them (required for V2-only coin rewards).
+        from tools.account_ids import get_v2_account_id, is_v2_account_id
+
+        for session_player in getattr(session, "sessionplayers", ()):
+            try:
+                player_client_id = int(session_player.inputdevice.client_id)
+            except Exception:
+                continue
+            if player_client_id != int(client_id):
+                continue
+
+            candidate_id = get_v2_account_id(session_player)
+            account_id = candidate_id if is_v2_account_id(candidate_id) else None
+            getter = getattr(session_player, "getname", None)
+            if callable(getter):
+                try:
+                    candidate_name = getter(full=False, icon=False)
+                except TypeError:
+                    try:
+                        candidate_name = getter()
+                    except Exception:
+                        candidate_name = None
+                except Exception:
+                    candidate_name = None
+                if isinstance(candidate_name, str) and candidate_name.strip():
+                    display_name = " ".join(candidate_name.split())[:64]
+            break
+    except Exception:
+        _LOG.exception("Could not resolve quiz winner's V2 identity.")
+    return account_id, display_name
+
+
+def handle_answer(message: str, client_id: int) -> bool:
+    """Award the first correct answer; return True when the answer is consumed."""
+    global _CURRENT_QUESTION
+    if (
+        not isinstance(message, str)
+        or not message.strip()
+        or message.startswith("/")
+        or isinstance(client_id, bool)
+    ):
+        return False
+
+    try:
+        client_id = int(client_id)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    if client_id < 0:
+        return False
+
+    cfg = _config()
+    if not cfg["enable"]:
+        return False
+
+    normalized = _normalise_answer(message)
+    now = time.monotonic()
+    winner_name: str | None = None
+    reward = int(cfg["rewardCoins"])
+    new_balance: int | None = None
+    question_id: int | None = None
+
+    # Hold the lock while checking and crediting: two correct answers arriving
+    # close together cannot both win the same question.
+    with _LOCK:
+        current = _CURRENT_QUESTION
+        if current is None or now > float(current.get("expires_at", 0.0)):
+            return False
+        if normalized not in current.get("accepted", set()):
+            return False
+
+        account_id, player_name = _resolve_player(client_id)
+        if not account_id:
+            _LOG.warning(
+                "Correct quiz answer from client %s was not rewarded: valid V2 account ID unavailable.",
+                client_id,
+            )
+            return False
+
+        try:
+            from shop import coins
+
+            new_balance = coins.add_coins(account_id, reward, player_name)
+        except Exception:
+            _LOG.exception("Could not credit quiz reward to V2 account %s.", account_id)
+            return False
+
+        question_id = int(current["id"])
+        _CURRENT_QUESTION = None
+        winner_name = player_name
+
+    _broadcast(
+        "\n".join((
+            cfg["messages"]["correct_title"],
+            cfg["messages"]["winner"].format(
+                winner=winner_name,
+                reward=reward,
+            ),
+            cfg["messages"]["balance"].format(balance=new_balance),
+        ))
+    )
+    _LOG.info(
+        "Quiz question %s won by %s; awarded %s coins.",
+        question_id,
+        winner_name,
+        reward,
+    )
+
+    # Keep the configured question-start cadence even if someone answers early.
+    elapsed = max(0.0, now - float(current.get("asked_at", now)))
+    next_delay = max(1.0, float(cfg["intervalSeconds"]) - elapsed)
+    _schedule_next_question(next_delay)
+    return True
+
+
+def install() -> bool:
+    """Start automatic quiz scheduling once per server process."""
+    global _STARTED
+    if _STARTED:
+        return True
+    cfg = _config()
+    if not cfg["enable"]:
+        _LOG.info("Automatic quiz is disabled in setting.json.")
+        return False
+    _STARTED = True
+    _schedule(float(cfg["firstQuestionDelaySeconds"]), _ask_question)
+    _LOG.info(
+        "Automatic quiz enabled: interval=%ss, window=%ss, reward=%s coins.",
+        cfg["intervalSeconds"],
+        cfg["answerWindowSeconds"],
+        cfg["rewardCoins"],
+    )
+    return True

@@ -1,0 +1,30 @@
+{
+ "e": {
+  "textures/always_land_bgcolor": {},
+  "textures/always_land_level_color": {},
+  "textures/big_g": {},
+  "textures/bridgit_level_color": {},
+  "textures/courtyard_level_color": {},
+  "textures/crag_castle_level_color": {},
+  "textures/doom_shroom_bgcolor": {},
+  "textures/doom_shroom_level_color": {},
+  "textures/football_stadium": {},
+  "textures/hockey_stadium": {},
+  "textures/lake_frigid": {},
+  "textures/lake_frigid_reflections": {},
+  "textures/menu_bg": {},
+  "textures/monkey_face_level_color": {},
+  "textures/nature_background_color": {},
+  "textures/rampage_bgcolor": {},
+  "textures/rampage_bgcolor2": {},
+  "textures/rampage_level_color": {},
+  "textures/roundabout_level_color": {},
+  "textures/step_right_up_level_color": {},
+  "textures/the_pad_level_color": {},
+  "textures/tip_top_bgcolor": {},
+  "textures/tip_top_level_color": {},
+  "textures/tower_dlevel_color": {},
+  "textures/vr_fill_mound": {},
+  "textures/zig_zag_level_color": {}
+ }
+}

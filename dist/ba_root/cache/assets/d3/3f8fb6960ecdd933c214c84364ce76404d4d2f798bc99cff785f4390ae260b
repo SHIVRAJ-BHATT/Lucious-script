@@ -1,0 +1,31 @@
+{
+ "e": {
+  "textures/always_land_preview": {},
+  "textures/big_g_preview": {},
+  "textures/bridgit_preview": {},
+  "textures/character_icon_mask": {},
+  "textures/chest_icon": {},
+  "textures/chest_icon_tint": {},
+  "textures/chest_open_icon": {},
+  "textures/chest_open_icon_tint": {},
+  "textures/coin": {},
+  "textures/courtyard_preview": {},
+  "textures/crag_castle_preview": {},
+  "textures/doom_shroom_preview": {},
+  "textures/football_stadium_preview": {},
+  "textures/hockey_stadium_preview": {},
+  "textures/lake_frigid_preview": {},
+  "textures/map_preview_mask": {},
+  "textures/monkey_face_preview": {},
+  "textures/rampage_preview": {},
+  "textures/roundabout_preview": {},
+  "textures/step_right_up_preview": {},
+  "textures/the_pad_preview": {},
+  "textures/tickets": {},
+  "textures/tickets_purple": {},
+  "textures/tip_top_preview": {},
+  "textures/tower_d_preview": {},
+  "textures/viewer_mask": {},
+  "textures/zigzag_preview": {}
+ }
+}

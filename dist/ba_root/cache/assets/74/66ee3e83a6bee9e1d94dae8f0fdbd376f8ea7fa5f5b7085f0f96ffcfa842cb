@@ -1,0 +1,178 @@
+{
+ "e": {
+  "meshes/always_land_level_collide": {
+   "c.cob": {
+    "h": "ebbd98ae0bebc64891536d371e1981a8101f4176174fd0712ef68e22f1eb7937",
+    "s": 31152
+   }
+  },
+  "meshes/big_gbumper": {
+   "c.cob": {
+    "h": "fb6a299f7635a444b414301ee713d95f51fe925c3335a9333b8fe9c876731a1b",
+    "s": 2724
+   }
+  },
+  "meshes/big_gcollide": {
+   "c.cob": {
+    "h": "7992a6d524c1211502edb9f83f20984fed90328bd23637d4f694ceaf741c5ca9",
+    "s": 15384
+   }
+  },
+  "meshes/bridgit_level_collide": {
+   "c.cob": {
+    "h": "88ab534d7d08bdea013590ed800bafd8a5607600224a48800f37adf1e1b9eefd",
+    "s": 9588
+   }
+  },
+  "meshes/bridgit_level_railing_collide": {
+   "c.cob": {
+    "h": "d49d8b8dabc8dd8349789bfc4e663ed0ee8962960d8a7da1fdfb8dcdc02920d9",
+    "s": 1164
+   }
+  },
+  "meshes/courtyard_level_collide": {
+   "c.cob": {
+    "h": "26ced42997d754cf171728760dd05c04f6e4c0ae20bceef6c51fc09189584edc",
+    "s": 11832
+   }
+  },
+  "meshes/courtyard_player_wall": {
+   "c.cob": {
+    "h": "3ed4842440bbab3d3e21fa62711b1afab02a8044333b745c5d0fc06f1d875946",
+    "s": 3372
+   }
+  },
+  "meshes/crag_castle_level_bumper": {
+   "c.cob": {
+    "h": "0ddf2b60dac84862b68671bd32f8b8174b5b6a0c9b2cf0b1a8819b0860f0d635",
+    "s": 2316
+   }
+  },
+  "meshes/crag_castle_level_collide": {
+   "c.cob": {
+    "h": "bfe23e6af6aeb65a7706e25d18d0a008e8c74036131039ae31e0cea5f799009a",
+    "s": 58116
+   }
+  },
+  "meshes/doom_shroom_level_collide": {
+   "c.cob": {
+    "h": "42f9b71b494bda8ca9e2b8c166d994067a373b33e13fbfe1920dab141bf7ca4b",
+    "s": 12444
+   }
+  },
+  "meshes/doom_shroom_stem_collide": {
+   "c.cob": {
+    "h": "4315329373b17b12d17cda4fb2c951198bd5381bf7f5ff3047f7bb1fa9059a3f",
+    "s": 9468
+   }
+  },
+  "meshes/football_stadium_collide": {
+   "c.cob": {
+    "h": "6fa3c1f978ad32441e5bf2ae7ff989acad46dc81d1681c1d8310f99d02df4719",
+    "s": 13572
+   }
+  },
+  "meshes/hockey_stadium_collide": {
+   "c.cob": {
+    "h": "94f7c58d84ead5a6db0ae99d6ca8ea46cdb3a448d376e57f09b4a160e5fadacb",
+    "s": 13632
+   }
+  },
+  "meshes/lake_frigid_collide": {
+   "c.cob": {
+    "h": "8122326ae2bdd62dbbbd4883f22986f8fcb7726c3dc6be00de83efee2719252a",
+    "s": 18996
+   }
+  },
+  "meshes/monkey_face_level_bumper": {
+   "c.cob": {
+    "h": "1677c2b4f740bdb08de9178616053119a8d5c5c42c49995c7dcd5dfb01e4b25d",
+    "s": 2796
+   }
+  },
+  "meshes/monkey_face_level_collide": {
+   "c.cob": {
+    "h": "fe0fefc7b255be145e7d5f10cdb2bcf884923181ff97ed510fefad4443588438",
+    "s": 3900
+   }
+  },
+  "meshes/nature_background_collide": {
+   "c.cob": {
+    "h": "14e51cc0d8a8eb12f913672ced4fed2a63208c0fb79e9413d2a7487834e942c0",
+    "s": 28032
+   }
+  },
+  "meshes/rampage_bumper": {
+   "c.cob": {
+    "h": "bc5efe10521c1d18a12f8ecd2dba627f90b50f019a6edf9704dba34d40f19c17",
+    "s": 444
+   }
+  },
+  "meshes/rampage_level_collide": {
+   "c.cob": {
+    "h": "da750aa1905963d534735c04de6cb115fba5aa50f6724dde7f7f9847c5f1d99e",
+    "s": 2568
+   }
+  },
+  "meshes/roundabout_level_bumper": {
+   "c.cob": {
+    "h": "16b14dabd030647fe1e15a7115064de91f9597e7cec74233088aa0cd564d8e60",
+    "s": 1644
+   }
+  },
+  "meshes/roundabout_level_collide": {
+   "c.cob": {
+    "h": "9d18de099a273fadf5d3e0bee6bf733760db0c3daaa2c4d13119afb5f6793c7d",
+    "s": 8028
+   }
+  },
+  "meshes/step_right_up_level_collide": {
+   "c.cob": {
+    "h": "23dae153b40036060c9649a9e2ad795f6a69ec536fc42164f370988487d19bba",
+    "s": 19728
+   }
+  },
+  "meshes/the_pad_level_bumper": {
+   "c.cob": {
+    "h": "e0afc120b4e3c369ac38ba2bffd07b9a4697214929714b66a22f59160aa38f81",
+    "s": 636
+   }
+  },
+  "meshes/the_pad_level_collide": {
+   "c.cob": {
+    "h": "818d6ddbba5f0baa6aeae5387be5ecc63939f7bf565f8b15c481eadc3ba817c6",
+    "s": 3072
+   }
+  },
+  "meshes/tip_top_level_bumper": {
+   "c.cob": {
+    "h": "2c5b8e488bff89b2234d1a25c8b1f856998a81696b6de903e88abb7820196980",
+    "s": 3660
+   }
+  },
+  "meshes/tip_top_level_collide": {
+   "c.cob": {
+    "h": "89c30a37b2106540ebe1ffff49f5c414086abcafa50d4ac646df833fb885871a",
+    "s": 16920
+   }
+  },
+  "meshes/tower_dlevel_collide": {
+   "c.cob": {
+    "h": "078d70f37bf4bbee716c7d135611988fac8f39c5c76fc046f9e933c58000a091",
+    "s": 13044
+   }
+  },
+  "meshes/zig_zag_level_bumper": {
+   "c.cob": {
+    "h": "f71ec6d3e27731593c48e7aa502f9aee99b27f3ca1b621ee024001a102529c4f",
+    "s": 2604
+   }
+  },
+  "meshes/zig_zag_level_collide": {
+   "c.cob": {
+    "h": "68cc329a0cd5bffaee65cb3cfd3a7f81150a77622609ab451aaed1cb14a19c17",
+    "s": 20052
+   }
+  }
+ }
+}

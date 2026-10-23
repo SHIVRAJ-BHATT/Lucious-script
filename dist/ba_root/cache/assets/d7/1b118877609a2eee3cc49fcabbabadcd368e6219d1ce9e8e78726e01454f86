@@ -1,0 +1,519 @@
+{
+ "e": {
+  "audio/achievement": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/activate_beep": {},
+  "audio/alarm": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_eight": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_five": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_four": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_nine": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_one": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_seven": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_six": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_ten": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_three": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/announce_two": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/bell_high": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/bell_low": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/bell_med": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/big_impact": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/big_impact2": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/block": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/bomb_drop01": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/bomb_drop02": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/bomb_roll01": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/boo": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/box_drop": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/boxing_bell": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/cash_register2": {},
+  "audio/char_select_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/cheer": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/cork_pop": {},
+  "audio/crowd_chant": {},
+  "audio/cymbal": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/debris_fall": {
+   "j.json": {
+    "h": "6594339741d798d83e068fea012a190b90f2b7fc6284135d01275956bf44007a",
+    "s": 20
+   }
+  },
+  "audio/deek": {},
+  "audio/deek2": {},
+  "audio/ding_small": {},
+  "audio/ding_small_high": {},
+  "audio/dripity": {},
+  "audio/drum_roll": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/drum_roll_short": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/explosion01": {},
+  "audio/explosion02": {},
+  "audio/explosion03": {},
+  "audio/explosion04": {},
+  "audio/explosion05": {},
+  "audio/fanfare": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/flag_catcher_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/flying_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/foghorn": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/foot_impact01": {
+   "j.json": {
+    "h": "6594339741d798d83e068fea012a190b90f2b7fc6284135d01275956bf44007a",
+    "s": 20
+   }
+  },
+  "audio/foot_impact02": {
+   "j.json": {
+    "h": "6594339741d798d83e068fea012a190b90f2b7fc6284135d01275956bf44007a",
+    "s": 20
+   }
+  },
+  "audio/foot_impact03": {
+   "j.json": {
+    "h": "6594339741d798d83e068fea012a190b90f2b7fc6284135d01275956bf44007a",
+    "s": 20
+   }
+  },
+  "audio/forward_march_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/freeze": {},
+  "audio/fuse01": {},
+  "audio/gong": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/grand_romp_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/gravel_skid": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/health_powerup": {},
+  "audio/hiss": {},
+  "audio/impact_hard": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/impact_hard2": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/impact_hard3": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/impact_medium": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/impact_medium2": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/laser": {},
+  "audio/laser_reverse": {},
+  "audio/menu_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/metal_hit": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/metal_skid": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/orchestra_hit": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/orchestra_hit2": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/orchestra_hit3": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/orchestra_hit4": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/orchestra_hit_big1": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/orchestra_hit_big2": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/player_death": {},
+  "audio/player_left": {},
+  "audio/pop01": {},
+  "audio/powerup01": {},
+  "audio/punch01": {},
+  "audio/punch_strong01": {},
+  "audio/punch_strong02": {},
+  "audio/punch_swish": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/punch_weak01": {},
+  "audio/race_beep1": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/race_beep2": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/ref_whistle": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/run_away_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/scamper01": {
+   "j.json": {
+    "h": "6594339741d798d83e068fea012a190b90f2b7fc6284135d01275956bf44007a",
+    "s": 20
+   }
+  },
+  "audio/scary_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/score": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/score_hit01": {},
+  "audio/score_hit02": {},
+  "audio/scores_epic_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/shatter": {},
+  "audio/shield_down": {},
+  "audio/shield_hit": {},
+  "audio/shield_up": {},
+  "audio/skid01": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/slow_epic_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/spawn": {},
+  "audio/spaz_eff": {},
+  "audio/spaz_ow": {},
+  "audio/spaz_scream01": {},
+  "audio/splatter": {},
+  "audio/sports_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/sticky_impact": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/super_punch": {},
+  "audio/survival_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/swip": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/swip2": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/swish": {
+   "j.json": {
+    "h": "25e67774ef7a3fc6db1b87b47f3826513f87ee13d08161b639fe977e05de657d",
+    "s": 18
+   }
+  },
+  "audio/techno_hit01": {},
+  "audio/tick": {},
+  "audio/ticking": {},
+  "audio/to_the_death_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/trash_rummage": {},
+  "audio/victory_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/warn_beep": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/warn_beeps": {
+   "j.json": {
+    "h": "f54163e252b491c08a62f7a6d031000e2ca7248a4d249c38825a241df7f61df8",
+    "s": 19
+   }
+  },
+  "audio/when_johnny_comes_marching_home_music": {
+   "j.json": {
+    "h": "996c6dd1a69d5b1b9e5e864637f70c2e76be97b92a3c6a1c70d007283cc4970b",
+    "s": 21
+   }
+  },
+  "audio/wood_debris_fall": {
+   "j.json": {
+    "h": "6594339741d798d83e068fea012a190b90f2b7fc6284135d01275956bf44007a",
+    "s": 20
+   }
+  },
+  "audio/zoe_eff": {},
+  "audio/zoe_ow": {},
+  "audio/zoe_scream01": {}
+ }
+}

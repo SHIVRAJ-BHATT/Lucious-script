@@ -1,0 +1,20 @@
+{
+ "e": {
+  "meshes/cross_out": {},
+  "meshes/eye_ball": {},
+  "meshes/eye_ball_iris": {},
+  "meshes/eye_lid": {},
+  "meshes/flag_pole": {},
+  "meshes/flash": {},
+  "meshes/image1x1_full_screen": {},
+  "meshes/image1x1_vrfull_screen": {},
+  "meshes/locator": {},
+  "meshes/locator_box": {},
+  "meshes/locator_circle": {},
+  "meshes/locator_circle_outline": {},
+  "meshes/scorch": {},
+  "meshes/shield": {},
+  "meshes/shock_wave": {},
+  "meshes/wing": {}
+ }
+}

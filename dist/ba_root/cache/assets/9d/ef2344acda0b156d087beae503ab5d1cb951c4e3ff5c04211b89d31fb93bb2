@@ -1,0 +1,111 @@
+{
+ "strings": {
+  "strings/economy/received_tickets": {
+   "a": "count",
+   "f": {
+    "one": "Received # Ticket!",
+    "other": "Received # Tickets!"
+   },
+   "t": "p"
+  },
+  "strings/economy/watch_an_ad": "Watch an Ad",
+  "strings/economy/you_got_tokens": {
+   "a": "tokens",
+   "f": {
+    "one": "You got # Token!",
+    "other": "You got # Tokens!"
+   },
+   "t": "p"
+  },
+  "strings/profile/account_profile": "(account profile)",
+  "strings/profile/account_profile_info": {
+   "v": "This special profile has a name and icon based on your account. {icons} Create custom profiles to use different names or custom icons.",
+   "w": {
+    "mn": 7,
+    "mx": 7
+   }
+  },
+  "strings/profile/available": "The name {name} is available.",
+  "strings/profile/cant_delete_account_profile": "You can't delete your account profile.",
+  "strings/profile/cant_edit_here": "This profile can't be edited here.",
+  "strings/profile/character": "character",
+  "strings/profile/character_label": "Character",
+  "strings/profile/character_updated": "Character updated.",
+  "strings/profile/checking_availability": "Checking availability for \"{name}\"...",
+  "strings/profile/choose_character": "Choose Character",
+  "strings/profile/choose_icon": "Choose Icon",
+  "strings/profile/color": "color",
+  "strings/profile/color_label": "Color",
+  "strings/profile/delete_confirm": "Delete '{profile}'?",
+  "strings/profile/delete_global_note": "Note: to release a global profile you must delete the legacy profile",
+  "strings/profile/delete_profile": "Delete Profile",
+  "strings/profile/delete_this_profile": "Delete this profile?",
+  "strings/profile/get_more_characters": "Get More Characters...",
+  "strings/profile/get_more_icons": "Get More Icons...",
+  "strings/profile/global_profile": "(global profile)",
+  "strings/profile/global_profile_info": {
+   "v": "Global profiles are guaranteed to have unique names worldwide. They also include custom icons.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/profile/highlight": "highlight",
+  "strings/profile/highlight_label": "Highlight",
+  "strings/profile/icon": "icon",
+  "strings/profile/icon_label": "Icon",
+  "strings/profile/in_game_clipped_name": {
+   "v": "In-game: {name}",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/profile/local_profile": "(local profile)",
+  "strings/profile/local_profile_info": {
+   "v": "Local player profiles have no icons and their names are not guaranteed to be unique. Upgrade to a global profile to reserve a unique name and add a custom icon.",
+   "w": {
+    "mn": 3,
+    "mx": 3
+   }
+  },
+  "strings/profile/name_description": "Player Name",
+  "strings/profile/name_edge_underscore": "Profile names may not start or end with \"_\".",
+  "strings/profile/name_no_icons": "Profile names may not contain icons.",
+  "strings/profile/name_not_empty": "Name cannot be empty!",
+  "strings/profile/not_enough_tickets": "Not enough Tickets!",
+  "strings/profile/nothing_selected": "Nothing is selected!",
+  "strings/profile/preview_ended": "This preview has ended. Press play on the character's page to start another.",
+  "strings/profile/profile_already_exists": "A profile with that name already exists.",
+  "strings/profile/profile_deleted": "Profile deleted.",
+  "strings/profile/profile_saved": "Profile saved.",
+  "strings/profile/profile_upgraded": "Upgraded to a global profile.",
+  "strings/profile/purchasing": "Purchasing...",
+  "strings/profile/random_name": "Random Name",
+  "strings/profile/save_name_first": "You must save changes to your name first.",
+  "strings/profile/title_edit": "Edit Profile",
+  "strings/profile/title_new": "New Profile",
+  "strings/profile/too_many_legacy_profiles": "You have too many legacy profiles; delete one and try again.",
+  "strings/profile/unavailable": "\"{name}\" is unavailable. Try another name.",
+  "strings/profile/upgrade_price_changed": "The price has changed; please try again.",
+  "strings/profile/upgrade_profile_info": {
+   "v": "This will reserve your player name worldwide and allow you to assign a custom icon to it.",
+   "w": {
+    "mn": 2,
+    "mx": 2
+   }
+  },
+  "strings/profile/upgrade_to_global": "Upgrade to Global Profile",
+  "strings/profiles/convert_failed": "Unable to convert your legacy profiles right now; will try again later.",
+  "strings/profiles/converting": "Converting profiles...",
+  "strings/profiles/explanation": "(custom player names and appearances for this account)",
+  "strings/profiles/legacy_explanation": "Used when connected to old servers or when cloud profiles are not available. Supports only a limited set of characters and looks.",
+  "strings/profiles/legacy_title": "Legacy Profiles",
+  "strings/profiles/max_reached": "Max number of profiles reached.",
+  "strings/profiles/new_profile": "New Profile",
+  "strings/profiles/not_migrated_note": "NOTE: Your legacy profiles have not been migrated to cloud profiles yet. Migration will happen soon.",
+  "strings/profiles/show_cloud_profiles": "Show Cloud Profiles",
+  "strings/profiles/show_legacy_profiles": "Show Legacy Profiles",
+  "strings/profiles/title": "Player Profiles"
+ }
+}

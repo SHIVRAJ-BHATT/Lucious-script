@@ -1,0 +1,804 @@
+# Released under the MIT License. See LICENSE for details.
+#
+"""Predefined tabs for the dev console."""
+
+import math
+import random
+import logging
+from functools import partial
+from typing import TYPE_CHECKING, override
+
+import _babase
+
+from babase._logging import description_for_logger
+from babase._devconsole import DevConsoleTab
+
+if TYPE_CHECKING:
+    from typing import Callable, Literal
+
+    from bacommon.loggercontrol import LoggerControlConfig
+    from babase import AppMode
+
+
+class DevConsoleTabPython(DevConsoleTab):
+    """The Python dev-console tab."""
+
+    @override
+    def refresh(self) -> None:
+        self.python_terminal()
+
+
+class DevConsoleTabAppModes(DevConsoleTab):
+    """Tab to switch app modes."""
+
+    def __init__(self) -> None:
+        self._app_modes: list[type[AppMode]] | None = None
+        self._app_modes_loading = False
+
+    def _on_app_modes_loaded(self, modes: list[type[AppMode]]) -> None:
+        from babase._appintent import AppIntentDefault
+
+        intent = AppIntentDefault()
+
+        # Limit to modes that can handle default intents since that's
+        # what we use.
+        self._app_modes = [
+            mode for mode in modes if mode.can_handle_intent(intent)
+        ]
+        self.request_refresh()
+
+    @override
+    def refresh(self) -> None:
+        from babase import AppMode
+        from babase._asset_packages import construct_assets_complete
+
+        # Refuse to do anything while the app is still in construct
+        # mode. Two reasons, and the first is why this guard sits here
+        # rather than on the switch buttons: the load below execs the
+        # modules that export app-modes -- wrapper modules among them --
+        # and those may name asset-packages construct-mode has not
+        # acquired yet. Switching into such a mode then lands us
+        # somewhere whose assets were never resolved, which is the exact
+        # situation construct mode exists to prevent.
+        if not construct_assets_complete():
+            self.text(
+                'Unavailable until asset acquisition completes.',
+                pos=(0, 42),
+                h_anchor='center',
+                h_align='center',
+                scale=0.8,
+            )
+            self.text(
+                '(the app is still in construct mode)',
+                pos=(0, 18),
+                h_anchor='center',
+                h_align='center',
+                scale=0.6,
+                style='faded',
+            )
+            return
+
+        # Kick off a load if applicable.
+        if self._app_modes is None and not self._app_modes_loading:
+            _babase.app.meta.load_exported_classes(
+                'babase.AppMode', AppMode, self._on_app_modes_loaded
+            )
+
+        # Just say 'loading' if we don't have app-modes yet.
+        if self._app_modes is None:
+            self.text(
+                'Loading...', pos=(0, 30), h_anchor='center', h_align='center'
+            )
+            return
+
+        bwidth = 300
+        bpadding = 5
+
+        xoffs = -0.5 * bwidth * len(self._app_modes)
+
+        self.text(
+            'Available AppModes:',
+            scale=0.8,
+            pos=(0, 78),
+            h_align='center',
+            v_align='center',
+        )
+        # pylint: disable=protected-access
+        for i, mode in enumerate(self._app_modes):
+            self.button(
+                f'{mode.__module__}.{mode.__qualname__}',
+                pos=(xoffs + i * bwidth + bpadding, 15),
+                size=(bwidth - 2.0 * bpadding, 40),
+                label_scale=0.6,
+                call=partial(self._set_app_mode, mode),
+                style=(
+                    'bright'
+                    if isinstance(_babase.app._mode, mode)
+                    else 'normal'
+                ),
+            )
+
+    def _set_app_mode(self, mode: type[AppMode]) -> None:
+        from babase._appintent import AppIntentDefault
+
+        intent = AppIntentDefault()
+
+        # Use private functionality to force a specific app-mode to
+        # handle this intent. Note that this should never be done
+        # outside of this explicit testing case. It is the app's job to
+        # determine which app-mode should be used to handle a given
+        # intent.
+        setattr(intent, '_force_app_mode_handler', mode)
+
+        _babase.app.set_intent(intent)
+
+        # Slight hackish: need to wait a moment before refreshing to
+        # pick up the newly current mode, as mode switches are
+        # asynchronous.
+        _babase.apptimer(0.1, self.request_refresh)
+
+
+class Table[T]:
+    """Used to show controls for arbitrarily large data in a grid form."""
+
+    def __init__(
+        self,
+        title: str,
+        entries: list[T],
+        draw_entry_call: Callable[
+            [int, T, DevConsoleTab, float, float, float, float], None
+        ],
+        *,
+        entry_width: float = 300.0,
+        entry_height: float = 40.0,
+        margin_left_right: float = 60.0,
+        debug_bounds: bool = False,
+        max_columns: int | None = None,
+        focus_entry_config_key: str | None = None,
+    ) -> None:
+        self._title = title
+        self._entry_width = entry_width
+        self._entry_height = entry_height
+        self._margin_left_right = margin_left_right
+        self._focus_entry_index = 0
+        self._entries_per_page = 1
+        self._debug_bounds = debug_bounds
+        self._entries = entries
+        self._draw_entry_call = draw_entry_call
+        self._max_columns = max_columns
+        self._focus_entry_config_key = focus_entry_config_key
+
+        # Values updated on refresh (for aligning other custom
+        # widgets/etc.)
+        self.top_left: tuple[float, float] = (0.0, 0.0)
+        self.top_right: tuple[float, float] = (0.0, 0.0)
+
+        # If we've got a config key, restore any value there.
+        if self._focus_entry_config_key is not None:
+            val = _babase.app.config.get(self._focus_entry_config_key)
+            if isinstance(val, int):
+                self._focus_entry_index = val
+
+    def set_entries(self, entries: list[T]) -> None:
+        """Update table entries."""
+        self._entries = entries
+
+        # Clamp focus to new entries.
+        self._focus_entry_index = max(
+            0, min(len(self._entries) - 1, self._focus_entry_index)
+        )
+
+    def set_focus_entry_index(self, index: int) -> None:
+        """Explicitly set the focused entry.
+
+        This affects which page is shown at the next refresh.
+        """
+        self._focus_entry_index = max(0, min(len(self._entries) - 1, index))
+        if self._focus_entry_config_key is not None:
+            _babase.app.config[self._focus_entry_config_key] = (
+                self._focus_entry_index
+            )
+            _babase.app.config.commit()
+
+    def refresh(self, tab: DevConsoleTab) -> None:
+        """Call to refresh the data."""
+
+        margin_top = 50.0
+        margin_bottom = 10.0
+
+        # Update how much we can fit on a page based on our current size.
+        max_entry_area_width = tab.width - (self._margin_left_right * 2.0)
+        max_entry_area_height = tab.height - (margin_top + margin_bottom)
+        columns = max(1, int(max_entry_area_width / self._entry_width))
+        if self._max_columns is not None:
+            columns = min(columns, self._max_columns)
+        rows = max(1, int(max_entry_area_height / self._entry_height))
+        self._entries_per_page = rows * columns
+
+        # See which page our focus index falls in.
+        pagemax = math.ceil(len(self._entries) / self._entries_per_page)
+
+        page = self._focus_entry_index // self._entries_per_page
+        entry_offset = page * self._entries_per_page
+
+        entries_on_this_page = min(
+            self._entries_per_page, len(self._entries) - entry_offset
+        )
+        columns_on_this_page = math.ceil(entries_on_this_page / rows)
+        rows_on_this_page = min(entries_on_this_page, rows)
+
+        # We attach things to the center so resizes are smooth but we do
+        # some math in a left-centric way.
+        center_to_left = tab.width * -0.5
+
+        # Center our columns.
+        xoffs = 0.5 * (
+            max_entry_area_width - columns_on_this_page * self._entry_width
+        )
+
+        # Align everything to the bottom of the dev-console.
+        #
+        # UPDATE: Nevermind; top feels better. Keeping this code around
+        # in case we ever want to make it an option though.
+        if bool(False):
+            yoffs = -1.0 * (
+                tab.height
+                - (
+                    rows_on_this_page * self._entry_height
+                    + margin_top
+                    + margin_bottom
+                )
+            )
+        else:
+            yoffs = 0
+
+        # Keep our corners up to date for user use.
+        self.top_left = (center_to_left + xoffs, tab.height + yoffs)
+        self.top_right = (
+            self.top_left[0]
+            + self._margin_left_right * 2.0
+            + columns_on_this_page * self._entry_width,
+            self.top_left[1],
+        )
+
+        # Page left/right buttons.
+        tab.button(
+            '<',
+            pos=(
+                center_to_left + xoffs,
+                yoffs + tab.height - margin_top - rows * self._entry_height,
+            ),
+            size=(
+                self._margin_left_right,
+                rows * self._entry_height,
+            ),
+            call=partial(self._page_left, tab),
+            disabled=entry_offset == 0,
+        )
+        tab.button(
+            '>',
+            pos=(
+                center_to_left
+                + xoffs
+                + self._margin_left_right
+                + columns_on_this_page * self._entry_width,
+                yoffs + tab.height - margin_top - rows * self._entry_height,
+            ),
+            size=(
+                self._margin_left_right,
+                rows * self._entry_height,
+            ),
+            call=partial(self._page_right, tab),
+            disabled=(
+                entry_offset + entries_on_this_page >= len(self._entries)
+            ),
+        )
+
+        for column in range(columns):
+            for row in range(rows):
+                entry_index = entry_offset + column * rows + row
+                if entry_index >= len(self._entries):
+                    break
+
+                xpos = (
+                    xoffs + self._margin_left_right + self._entry_width * column
+                )
+                ypos = (
+                    yoffs
+                    + tab.height
+                    - margin_top
+                    - self._entry_height * (row + 1.0)
+                )
+                # Draw debug bounds.
+                if self._debug_bounds:
+                    tab.button(
+                        str(entry_index),
+                        pos=(
+                            center_to_left + xpos,
+                            ypos,
+                        ),
+                        size=(self._entry_width, self._entry_height),
+                        # h_anchor='left',
+                    )
+                # Run user drawing.
+                self._draw_entry_call(
+                    entry_index,
+                    self._entries[entry_index],
+                    tab,
+                    center_to_left + xpos,
+                    ypos,
+                    self._entry_width,
+                    self._entry_height,
+                )
+
+            if entry_index >= len(self._entries):
+                break
+
+        tab.text(
+            f'{self._title} ({page + 1}/{pagemax})',
+            scale=0.8,
+            pos=(0, yoffs + tab.height - margin_top * 0.5),
+            h_align='center',
+            v_align='center',
+        )
+
+    def _page_right(self, tab: DevConsoleTab) -> None:
+        # Set focus on the first entry in the page before the current.
+        page = self._focus_entry_index // self._entries_per_page
+        page += 1
+        self.set_focus_entry_index(page * self._entries_per_page)
+        tab.request_refresh()
+
+    def _page_left(self, tab: DevConsoleTab) -> None:
+        # Set focus on the first entry in the page after the current.
+        page = self._focus_entry_index // self._entries_per_page
+        page -= 1
+        self.set_focus_entry_index(page * self._entries_per_page)
+        tab.request_refresh()
+
+
+class DevConsoleTabGameplay(DevConsoleTab):
+    """Tab for debugging/testing gameplay stuff."""
+
+    @override
+    def refresh(self) -> None:
+        # Match the UI tab's button strip: one row of 40-high buttons
+        # centered horizontally.
+        bheight = 40.0
+        bwidth = 160.0
+        by = 15.0
+        xoffs = -bwidth * 0.5
+
+        debug_draw = _babase.get_debug_draw()
+        self.button(
+            'Debug Drawing ON' if debug_draw else 'Debug Drawing OFF',
+            pos=(xoffs, by),
+            size=(bwidth, bheight),
+            label_scale=0.5,
+            call=self.toggle_debug_draw,
+            style='bright' if debug_draw else 'normal',
+        )
+        self.text(
+            'Debug drawing shows rigid-body and joint guides in the scene'
+            ' (same as the F10 key).',
+            scale=0.6,
+            pos=(0, by + bheight + 20),
+            h_align='center',
+            v_align='center',
+        )
+
+    def toggle_debug_draw(self) -> None:
+        """Toggle engine debug drawing (same as the F10 key)."""
+        _babase.set_debug_draw(not _babase.get_debug_draw())
+        self.request_refresh()
+
+
+# __PUBSYNC_STRIP_BEGIN__
+class DevConsoleTabDevBuild(DevConsoleTab):
+    """Tab for developer-build-only tools.
+
+    Only present in automation-enabled (i.e. our own developer)
+    builds. Currently holds automation-device registration; a home
+    for other dev-only knobs as they come along.
+    """
+
+    @override
+    def refresh(self) -> None:
+        from babase import _automation
+
+        bheight = 40.0
+        bwidth = 200.0
+        by = 15.0
+
+        key = _automation.stored_device_key()
+        if key is None:
+            status = 'Not a registered automation device.'
+        else:
+            device_id = _automation.automation_device_id_for_key(key)
+            status = f'Registered automation device: {device_id}'
+        self.text(
+            status,
+            scale=0.6,
+            pos=(0, by + bheight + 20),
+            h_align='center',
+            v_align='center',
+        )
+        self.button(
+            'Register (new key)' if key is None else 'Re-register (new key)',
+            pos=(-bwidth - 5.0, by),
+            size=(bwidth, bheight),
+            label_scale=0.5,
+            call=self._register,
+            style='bright',
+        )
+        self.button(
+            'Unregister',
+            pos=(5.0, by),
+            size=(bwidth, bheight),
+            label_scale=0.5,
+            call=self._unregister,
+        )
+
+    def _register(self) -> None:
+        from babase import _automation
+
+        _automation.register_automation_device()
+        self.request_refresh()
+
+    def _unregister(self) -> None:
+        from babase import _automation
+
+        _automation.unregister_automation_device()
+        self.request_refresh()
+
+
+# __PUBSYNC_STRIP_END__
+class DevConsoleTabLogging(DevConsoleTab):
+    """Tab to wrangle logging levels."""
+
+    def __init__(self) -> None:
+
+        self._table = Table(
+            title='Logging Levels',
+            entry_width=800,
+            entry_height=44,
+            debug_bounds=False,
+            entries=list[str](),
+            draw_entry_call=self._draw_entry,
+            max_columns=1,
+            focus_entry_config_key='Logging Levels Focus Entry',
+        )
+
+    @override
+    def refresh(self) -> None:
+        from babase._cloudloggercontrol import cloud_logger_control_enabled
+
+        assert self._table is not None
+
+        bwidth = 140.0
+        bheight = 30.0
+        bvpad = 10.0
+
+        cloudcontrol = cloud_logger_control_enabled()
+
+        if cloudcontrol:
+            # Cloud control on: no manual controls; just explain the
+            # situation and offer the way out. Anchor the toggle where
+            # it sits in the manual layout (the table's single 800-wide
+            # column lands at x ±460 regardless of tab width).
+            self.text(
+                'Log levels are currently set automatically by the'
+                ' developer to help fix bugs.',
+                pos=(0.0, self.height * 0.5 + 10.0),
+                scale=0.6,
+            )
+            self.text(
+                'Turn off Cloud Control to set them manually.',
+                pos=(0.0, self.height * 0.5 - 14.0),
+                scale=0.5,
+                style='faded',
+            )
+            self.button(
+                'Cloud Control ON',
+                pos=(460.0 - bwidth, self.height - bheight - bvpad),
+                size=(bwidth, bheight),
+                label_scale=0.6,
+                style='bright',
+                call=partial(self._set_cloud_control, False),
+            )
+            return
+
+        # Update table entries with the latest set of loggers (this can
+        # change over time). Sort with 'root' first, followed by all our
+        # 'ba' loggers, followed by everything else.
+        self._table.set_entries(
+            ['root']
+            + sorted(
+                logging.root.manager.loggerDict,
+                key=lambda name: (name.split('.')[0] != 'ba', name),
+            )
+        )
+
+        # Draw the table.
+        self._table.refresh(self)
+
+        # Draw our control buttons in the corners.
+        tl = self._table.top_left
+        tr = self._table.top_right
+        self.button(
+            'Reset',
+            pos=(tl[0], tl[1] - bheight - bvpad),
+            size=(bwidth, bheight),
+            label_scale=0.6,
+            call=self._reset,
+            disabled=(
+                not self._get_reset_logger_control_config().would_make_changes()
+            ),
+        )
+        self.button(
+            'Cloud Control OFF',
+            pos=(tr[0] - bwidth, tl[1] - bheight - bvpad),
+            size=(bwidth, bheight),
+            label_scale=0.6,
+            call=partial(self._set_cloud_control, True),
+        )
+
+    def _set_cloud_control(self, enabled: bool) -> None:
+        from babase._cloudloggercontrol import (
+            set_cloud_logger_control_enabled,
+        )
+
+        set_cloud_logger_control_enabled(enabled)
+        self.request_refresh()
+
+    def _get_reset_logger_control_config(self) -> LoggerControlConfig:
+        from bacommon.logging import get_base_logger_control_config_client
+
+        return get_base_logger_control_config_client()
+
+    def _reset(self) -> None:
+
+        self._get_reset_logger_control_config().apply()
+
+        # Let the native layer know that levels changed.
+        _babase.update_internal_logger_levels()
+
+        # Blow away any existing values in app-config.
+        appconfig = _babase.app.config
+        if 'Log Levels' in appconfig:
+            del appconfig['Log Levels']
+            appconfig.commit()
+
+        self.request_refresh()
+
+    def _set_entry_val(self, entry_index: int, entry: str, val: int) -> None:
+
+        from bacommon.logging import get_base_logger_control_config_client
+        from bacommon.loggercontrol import LoggerControlConfig
+
+        # Focus on this entry with any interaction, so if we get resized
+        # it'll still be visible.
+        self._table.set_focus_entry_index(entry_index)
+
+        logging.getLogger(entry).setLevel(val)
+
+        # Let the native layer know that levels changed.
+        _babase.update_internal_logger_levels()
+
+        # Store only changes compared to the base config.
+        baseconfig = get_base_logger_control_config_client()
+        config = LoggerControlConfig.from_current_loggers().diff(baseconfig)
+
+        appconfig = _babase.app.config
+        appconfig['Log Levels'] = config.levels
+        appconfig.commit()
+
+        self.request_refresh()
+
+    def _draw_entry(
+        self,
+        entry_index: int,
+        entry: str,
+        tab: DevConsoleTab,
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+    ) -> None:
+        # pylint: disable=too-many-positional-arguments
+
+        xoffs = -15.0
+        bwidth = 80.0
+        btextscale = 0.5
+        if desc := description_for_logger(entry):
+            tab.text(
+                desc,
+                (
+                    # x + width - bwidth * 6.5 - 10.0 + xoffs,
+                    x + 12,
+                    y + height * 0.5 - 12,
+                ),
+                h_align='left',
+                scale=0.4,
+                style='faded',
+            )
+            yoffs = 4
+        else:
+            yoffs = 0
+
+        tab.text(
+            entry,
+            (
+                # x + width - bwidth * 6.5 - 10.0 + xoffs,
+                x + 12,
+                y + height * 0.5 + yoffs,
+            ),
+            h_align='left',
+            scale=0.7,
+        )
+
+        logger = logging.getLogger(entry)
+        level = logger.level
+        index = 0
+        effectivelevel = logger.getEffectiveLevel()
+        notsetname = 'Not Set'
+        bradius = 5.0
+        bspacing = 2.0
+        tab.button(
+            notsetname,
+            pos=(x + width - bwidth * 6.5 + xoffs + 1.0, y + 5.0),
+            size=(bwidth * 1.0 - bspacing, height - 10),
+            label_scale=btextscale,
+            style='white_bright' if level == logging.NOTSET else 'black',
+            corner_radius=bradius,
+            call=partial(
+                self._set_entry_val, entry_index, entry, logging.NOTSET
+            ),
+        )
+        index += 1
+        tab.button(
+            'Debug',
+            pos=(x + width - bwidth * 5 + xoffs + 1.0, y + 5.0),
+            size=(bwidth - bspacing, height - 10),
+            label_scale=btextscale,
+            style=(
+                'white_bright'
+                if level == logging.DEBUG
+                else 'blue' if effectivelevel <= logging.DEBUG else 'black'
+            ),
+            corner_radius=bradius,
+            call=partial(
+                self._set_entry_val, entry_index, entry, logging.DEBUG
+            ),
+        )
+        index += 1
+        tab.button(
+            'Info',
+            pos=(x + width - bwidth * 4 + xoffs + 1.0, y + 5.0),
+            size=(bwidth - bspacing, height - 10),
+            label_scale=btextscale,
+            style=(
+                'white_bright'
+                if level == logging.INFO
+                else 'white' if effectivelevel <= logging.INFO else 'black'
+            ),
+            corner_radius=bradius,
+            call=partial(self._set_entry_val, entry_index, entry, logging.INFO),
+        )
+        index += 1
+        tab.button(
+            'Warning',
+            pos=(x + width - bwidth * 3 + xoffs + 1.0, y + 5.0),
+            size=(bwidth - bspacing, height - 10),
+            label_scale=btextscale,
+            style=(
+                'white_bright'
+                if level == logging.WARNING
+                else 'yellow' if effectivelevel <= logging.WARNING else 'black'
+            ),
+            corner_radius=bradius,
+            call=partial(
+                self._set_entry_val, entry_index, entry, logging.WARNING
+            ),
+        )
+        index += 1
+        tab.button(
+            'Error',
+            pos=(x + width - bwidth * 2 + xoffs + 1.0, y + 5.0),
+            size=(bwidth - bspacing, height - 10),
+            label_scale=btextscale,
+            style=(
+                'white_bright'
+                if level == logging.ERROR
+                else 'red' if effectivelevel <= logging.ERROR else 'black'
+            ),
+            corner_radius=bradius,
+            call=partial(
+                self._set_entry_val, entry_index, entry, logging.ERROR
+            ),
+        )
+        index += 1
+        tab.button(
+            'Critical',
+            pos=(x + width - bwidth * 1 + xoffs + 1.0, y + 5.0),
+            size=(bwidth - bspacing, height - 10),
+            label_scale=btextscale,
+            style=(
+                'white_bright'
+                if level == logging.CRITICAL
+                else (
+                    'purple' if effectivelevel <= logging.CRITICAL else 'black'
+                )
+            ),
+            corner_radius=bradius,
+            call=partial(
+                self._set_entry_val, entry_index, entry, logging.CRITICAL
+            ),
+        )
+
+
+class DevConsoleTabTest(DevConsoleTab):
+    """Test dev-console tab."""
+
+    @override
+    def refresh(self) -> None:
+
+        self.button(
+            f'FLOOP-{random.randrange(200)}',
+            pos=(10, 10),
+            size=(100, 30),
+            h_anchor='left',
+            label_scale=0.6,
+            call=self.request_refresh,
+        )
+        self.button(
+            f'FLOOP2-{random.randrange(200)}',
+            pos=(120, 10),
+            size=(100, 30),
+            h_anchor='left',
+            label_scale=0.6,
+            style='bright',
+        )
+        self.text(
+            'TestText',
+            scale=0.8,
+            pos=(15, 50),
+            h_anchor='left',
+            h_align='left',
+            v_align='none',
+        )
+
+        # Throw little bits of text in the corners to make sure
+        # widths/heights are correct.
+        self.text(
+            'BL',
+            scale=0.25,
+            pos=(0, 0),
+            h_anchor='left',
+            h_align='left',
+            v_align='bottom',
+        )
+        self.text(
+            'BR',
+            scale=0.25,
+            pos=(self.width, 0),
+            h_anchor='left',
+            h_align='right',
+            v_align='bottom',
+        )
+        self.text(
+            'TL',
+            scale=0.25,
+            pos=(0, self.height),
+            h_anchor='left',
+            h_align='left',
+            v_align='top',
+        )
+        self.text(
+            'TR',
+            scale=0.25,
+            pos=(self.width, self.height),
+            h_anchor='left',
+            h_align='right',
+            v_align='top',
+        )

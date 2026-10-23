@@ -1,0 +1,14 @@
+{
+ "asset_package_versions": {
+  "689": {
+   "apverid": "a-0.babuiltinassets.261014b",
+   "flavor_manifests": {
+    "audio/null.regular": "00c1192506965b56434a4ccfb8ee4c2d90e396987fa1d256782c7e8934ba8a27",
+    "constant": "6119cce59862c7e246de2f2d0879d86b55ae8619dd01394f39cb401d075b088b",
+    "language/eng": "9459848ba42e372930292ac556480375546cc73ba33d9e2ed9cd00cf6e4d1e6c",
+    "meshes/null.regular": "d51158d171b9d630caa88d0d0ae5eab369ac18d5f24eff7527837e38d88843d7",
+    "textures/null.gamma.regular": "dfbf6c0af142a96b09b4eeb84cce1d290688d55a4082764d4537c67164d74876"
+   }
+  }
+ }
+}

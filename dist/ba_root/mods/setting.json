@@ -1,0 +1,122 @@
+{
+  "autoNightMode": {
+    "enable": false,
+    "startTime": "18:30",
+    "endTime": "06:30",
+    "timezone": "Asia/Kolkata"
+  },
+  "autoTeamBalance": {
+    "enable": true
+  },
+  "enabletags": true,
+  "enablehptag": true,
+  "enablestats": true,
+  "enablePingDisplay": false,
+  "leaderboard": {
+    "enable": true,
+    "refreshSeconds": 10
+  },
+  "enableTop3effects": false,
+  "hiteffects": false,
+  "hitmessages": false,
+  "top3Effects": {
+    "rank1": "ringstars",
+    "rank2": "spark",
+    "rank3": "surrounder"
+  },
+  "textonmap": {
+    "enable": true
+  },
+  "playermod": {
+    "default_boxing_gloves": true,
+    "default_bomb_count": 2,
+    "default_bomb": "normal",
+    "enable_death_flight": false
+  },
+  "colorful_explosions": {
+    "enable": false
+  },
+  "snowfall": {
+    "enable": false,
+    "size": 0.75,
+    "fallSpeed": 50.0,
+    "particleCount": 10
+  },
+  "economy": {
+    "enable": true,
+    "dailyReward": 100,
+    "dailyCooldownHours": 24,
+    "ffaWinReward": 50,
+    "teamWinReward": 50,
+    "tagPrice": 100,
+    "effectPrice": 200,
+    "paidCommands": {
+      "enable": true,
+      "end": 5000,
+      "nv": 1000,
+      "gm": 2000
+    }
+  },
+  "soloBot": {
+    "enable": true,
+    "name": "KING KAI",
+    "character": "Mel",
+    "nameColor": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "color": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "highlight": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "spawnSeconds": 0.35,
+    "respawnSeconds": 0.65,
+    "showAnnouncements": true,
+    "spawnAnnouncement": "?  ?  {name} ?  ?  HAS SPAWNED  ?\n?  PREPARE FOR A FIGHT  ?",
+    "returnAnnouncement": "?  ? {name} RETURNS! ?  ?\n?  THE FIGHT CONTINUES  ?",
+    "spawnAnnouncementColor": [
+      0.2,
+      1.0,
+      0.75
+    ],
+    "returnAnnouncementColor": [
+      0.35,
+      0.75,
+      1.0
+    ]
+  },
+  "quiz": {
+    "enable": true,
+    "firstQuestionDelaySeconds": 30,
+    "intervalSeconds": 180,
+    "answerWindowSeconds": 30,
+    "rewardCoins": 25,
+    "announcerName": " XYZ QUIZ "
+  },
+  "StumbledScoreScreen": false,
+  },
+  "mapTint": {
+    "enable": false,
+    "color": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "powerupEffects": {
+    "enable": false,
+    "effect": "spark",
+    "continuous": false,
+    "intervalSeconds": 0.25
+  },
+  "flyingMine": {
+    "enable": true
+}
+}
