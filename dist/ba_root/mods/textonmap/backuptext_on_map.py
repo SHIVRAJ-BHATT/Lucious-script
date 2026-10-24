@@ -11,12 +11,16 @@ Screen formation
 
 All motion uses native scene-node curves (bs.animate / bs.animate_array);
 only three slow timers exist (features, online counter, leaderboard).
+The HUD lives on the activity itself, so it dies with the activity.
 """
 
 from __future__ import annotations
 
+import functools
+import heapq
 import logging
 import random
+import weakref
 from typing import Any
 
 import _babase
@@ -39,7 +43,7 @@ BRAND: dict[str, Any] = {
     "ornament": "\ue043",                       # "" hides side icons
     "tagline": "\ue047 COMMUNITY SERVER \ue048",  # "" hides tagline
     "y": -38,          # move down (e.g. -48) if it touches a game clock
-    "scale": 1.45,     # old clay text was 0.9
+    "scale": 1.45,
     "spacing": 34,
     "wave": 6,
     "colors": [
@@ -122,6 +126,7 @@ LEADERBOARD: dict[str, Any] = {
 }
 
 _FIELDS = ("rank", "name", "k", "d", "kd", "pts")
+_HUD_ATTR = "_lucious_hud"
 
 
 # =============================================================================
@@ -141,8 +146,12 @@ def _section(cfg: dict, name: str) -> dict:
     return value if isinstance(value, dict) else {}
 
 
+def _tom_enabled(cfg: dict) -> bool:
+    return _section(cfg, "textonmap").get("enable") is True
+
+
 def _text_on_map_enabled() -> bool:
-    return _section(_get_settings_snapshot(), "textonmap").get("enable") is True
+    return _tom_enabled(_get_settings_snapshot())
 
 
 setti = _get_settings_snapshot()  # legacy name kept for local add-ons
@@ -153,6 +162,11 @@ def _alive(node) -> bool:
         return node is not None and node.exists()
     except Exception:
         return False
+
+
+def _safe_delete(node) -> None:
+    if _alive(node):
+        node.delete()
 
 
 def _color_keys(colors, step: float) -> dict:
@@ -195,13 +209,20 @@ def _compact(value: int) -> str:
 class textonmap:
     """Builds the LUCIOUS HUD inside the current activity context."""
 
-    def __init__(self):
-        self._settings = _get_settings_snapshot()
+    def __init__(self, settings: dict | None = None):
+        self._settings = settings if isinstance(settings, dict) \
+            else _get_settings_snapshot()
         self._tom = _section(self._settings, "textonmap")
         self._disabled = self._tom.get("enable") is not True
         self._timers: list = []
         self._lb_rows: list[dict] = []
+        self._feature = None
+        self._feature_pos = (0.0, 0.0)
         self._feature_index = 0
+        self._online = None
+        self._online_text = ""
+        self._highlights: list[str] = []
+        self._hl_settings: dict = {}
         self._highlight_index = 0
         if self._disabled:
             return
@@ -236,6 +257,7 @@ class textonmap:
         word, sp, sc, y = c["text"], c["spacing"], c["scale"], c["y"]
         start = -((len(word) - 1) * sp) / 2
         keys = _color_keys(c["colors"], c["color_step"])
+        wave = c["wave"]
 
         for i, ch in enumerate(word):
             if ch.isspace():
@@ -248,8 +270,7 @@ class textonmap:
                                        d + 0.25: sc * 1.25, d + 0.4: sc})
             bs.animate_array(node, "color", 3, keys, loop=True, offset=d)
             bs.animate_array(node, "position", 2, {
-                0.0: (x, y), 0.45: (x, y + c["wave"]),
-                0.9: (x, y), 2.4: (x, y),
+                0.0: (x, y), 0.45: (x, y + wave), 0.9: (x, y), 2.4: (x, y),
             }, loop=True, offset=d * 1.5)
 
         if c["ornament"]:
@@ -323,7 +344,7 @@ class textonmap:
             y += step
 
         days = getattr(_babase, "season_ends_in_days", None)
-        if isinstance(days, int) and days < 99:
+        if isinstance(days, int) and not isinstance(days, bool) and days < 99:
             row(HUD_TEXT["season_reset"].format(days=days),
                 THEME["season_color"], 0.65)
             y += step
@@ -345,12 +366,12 @@ class textonmap:
             return "-"
 
     def _cycle_feature(self) -> None:
-        if _alive(getattr(self, "_feature", None)):
+        if _alive(self._feature):
             bs.animate(self._feature, "opacity", {0.0: 1.0, 0.3: 0.0})
             bs.timer(0.3, bs.WeakCall(self._show_next_feature))
 
     def _show_next_feature(self) -> None:
-        node = getattr(self, "_feature", None)
+        node = self._feature
         msgs = HUD_TEXT["feature_messages"]
         if not _alive(node) or not msgs:
             return
@@ -362,7 +383,7 @@ class textonmap:
         bs.animate(node, "opacity", {0.0: 0.0, 0.35: 1.0})
 
     def _update_online(self) -> None:
-        node = getattr(self, "_online", None)
+        node = self._online
         if not _alive(node):
             return
         try:
@@ -373,7 +394,8 @@ class textonmap:
         except Exception:
             count, suffix = 0, ""
         text = HUD_TEXT["online"].format(count=count, max=suffix)
-        if node.text != text:
+        if text != self._online_text:
+            self._online_text = text
             node.text = text
 
     # ---------------------------------------------------------- leaderboard
@@ -417,38 +439,35 @@ class textonmap:
                   h_align="left" if key == "name" else "center",
                   h_attach="right", v_attach="top")
 
-        for i in range(n):
-            y = first_y - i * rh
-            if i % 2 == 0:
-                self._image((cx, y), (w - 8, rh - 2), (1, 1, 1), 0.04,
-                            "topRight")
+        for i in range(0, n, 2):
+            self._image((cx, first_y - i * rh), (w - 8, rh - 2), (1, 1, 1),
+                        0.04, "topRight")
         glow = self._image((cx, first_y), (w - 8, rh - 2),
                            c["rank_colors"][0], 0.1, "topRight")
         bs.animate(glow, "opacity", {0.0: 0.05, 1.5: 0.2, 3.0: 0.05}, loop=True)
+
+        def cell(key, y, color, scale=0.58, align="center", maxwidth=None):
+            return _text("", (col[key], y), scale=scale, color=color,
+                         h_align=align, h_attach="right", v_attach="top",
+                         opacity=0.0, maxwidth=maxwidth)
 
         self._lb_rows = []
         for i in range(n):
             y = first_y - i * rh
             rc = c["rank_colors"][i % len(c["rank_colors"])]
-
-            def cell(key, color, scale=0.58, align="center", maxwidth=None):
-                return _text("", (col[key], y), scale=scale, color=color,
-                             h_align=align, h_attach="right", v_attach="top",
-                             opacity=0.0, maxwidth=maxwidth)
-
             row = {
-                "rank": cell("rank", rc, 0.66),
-                "name": cell("name", rc, align="left", maxwidth=118),
-                "k": cell("k", c["k_color"]),
-                "d": cell("d", c["d_color"]),
-                "kd": cell("kd", c["kd_color"]),
-                "pts": cell("pts", rc),
+                "rank": cell("rank", y, rc, 0.66),
+                "name": cell("name", y, rc, align="left", maxwidth=118),
+                "k": cell("k", y, c["k_color"]),
+                "d": cell("d", y, c["d_color"]),
+                "kd": cell("kd", y, c["kd_color"]),
+                "pts": cell("pts", y, rc),
                 "sig": None,
             }
             delay = 0.3 + i * 0.08
+            keys = {0.0: 0.0, delay: 0.0, delay + 0.3: 1.0}
             for key in _FIELDS:
-                bs.animate(row[key], "opacity",
-                           {0.0: 0.0, delay: 0.0, delay + 0.3: 1.0})
+                bs.animate(row[key], "opacity", keys)
             self._lb_rows.append(row)
 
         self._refresh_board(initial=True)
@@ -457,22 +476,24 @@ class textonmap:
             interval = 10
         self._repeat(max(2.0, min(float(interval), 3600.0)), self._refresh_board)
 
-    def _top_entries(self, limit: int) -> list[dict]:
-        stats = getattr(mystats, "cached_stats", {}) or {}
+    @staticmethod
+    def _top_entries(limit: int) -> list[dict]:
+        stats = getattr(mystats, "cached_stats", None) or {}
         if not isinstance(stats, dict):
             return []
-        ranks = list(getattr(mystats, "ranks", ()) or ())
-        if not ranks:
-            ranks = sorted(stats, reverse=True,
-                           key=lambda a: _int((stats.get(a) or {}).get("scores")))
-        out = []
-        for account_id in ranks:
-            entry = stats.get(account_id)
-            if isinstance(entry, dict):
-                out.append(entry)
-                if len(out) >= limit:
-                    break
-        return out
+        ranks = getattr(mystats, "ranks", None)
+        if ranks:
+            out = []
+            for account_id in ranks:
+                entry = stats.get(account_id)
+                if isinstance(entry, dict):
+                    out.append(entry)
+                    if len(out) >= limit:
+                        break
+            return out
+        # O(n log k) instead of sorting every player each refresh.
+        valid = (e for e in stats.values() if isinstance(e, dict))
+        return heapq.nlargest(limit, valid, key=lambda e: _int(e.get("scores")))
 
     @staticmethod
     def _kd(entry: dict) -> str:
@@ -518,17 +539,17 @@ class textonmap:
             row["sig"] = sig
             if initial:
                 self._write_row(row, values)
-            else:
-                for key in _FIELDS:
-                    if _alive(row[key]):
-                        bs.animate(row[key], "opacity", {0.0: 1.0, 0.15: 0.0})
-                bs.timer(0.16, bs.WeakCall(self._finish_row, i, values))
+                continue
+            for key in _FIELDS:
+                if _alive(row[key]):
+                    bs.animate(row[key], "opacity", {0.0: 1.0, 0.15: 0.0})
+            bs.timer(0.16, bs.WeakCall(self._finish_row, i, values))
 
     @staticmethod
     def _write_row(row: dict, values: dict) -> None:
         for key in _FIELDS:
             node = row[key]
-            if _alive(node) and node.text != values[key]:
+            if _alive(node):
                 node.text = values[key]
 
     def _finish_row(self, index: int, values: dict) -> None:
@@ -551,72 +572,55 @@ class textonmap:
                 source = msgs
         self._highlights = [m for m in source if isinstance(m, str) and m.strip()]
         if self._highlights:
+            self._hl_color = self._resolve_hl_color()
             self._repeat(8.0, self._show_highlight)
 
+    def _resolve_hl_color(self):
+        try:
+            color = tuple(float(v) for v in self._hl_settings.get("color", (1, 1, 1)))
+            return color if len(color) == 3 else (1.0, 1.0, 1.0)
+        except (TypeError, ValueError):
+            return (1.0, 1.0, 1.0)
+
     def _show_highlight(self) -> None:
-        hs = self._hl_settings
-        if hs.get("randomColor", False):
+        if self._hl_settings.get("randomColor", False):
             color = (random.random(), random.random(), random.random())
         else:
-            try:
-                color = tuple(float(v) for v in hs.get("color", (1, 1, 1)))
-                assert len(color) == 3
-            except Exception:
-                color = (1.0, 1.0, 1.0)
+            color = self._hl_color
         msg = self._highlights[self._highlight_index % len(self._highlights)]
         self._highlight_index += 1
         node = _text(msg, (0, LAYOUT["highlight_y"]), scale=1.0, color=color,
                      opacity=0.0)
         bs.animate(node, "opacity", {0.0: 0.0, 0.4: 1.0, 6.4: 1.0, 7.0: 0.0})
-        bs.timer(7.1, lambda: node.delete() if _alive(node) else None)
+        bs.timer(7.1, functools.partial(_safe_delete, node))
 
 
 # =============================================================================
 # API 9 installer (called by custom_hooks.py -> features.text_on_map.install())
 # =============================================================================
-_INSTANCE = None
-_CURRENT_ACTIVITY = None
+_CURRENT_REF: weakref.ref | None = None  # weak: never keeps an activity alive
 
 
-def _install_activity_end_cleanup() -> bool:
-    activity_class = getattr(bs, "Activity", None)
-    original_end = getattr(activity_class, "end", None)
-    if not callable(original_end):
-        _LOG.error("LuciousHUD requires bascenev1.Activity.end (API 9).")
-        return False
-    if getattr(original_end, "_text_on_map_end_wrapped", False):
-        return True
-
-    def wrapped_activity_end(self, *args, **kwargs):
-        global _INSTANCE, _CURRENT_ACTIVITY
-        is_current = self is _CURRENT_ACTIVITY
-        try:
-            return original_end(self, *args, **kwargs)
-        finally:
-            if is_current:
-                _INSTANCE = None
-                _CURRENT_ACTIVITY = None
-
-    wrapped_activity_end._text_on_map_end_wrapped = True
-    for marker in ("_lucifer_stats_wrapped", "_lucifer_coins_wrapped",
-                   "_lucifer_solo_bot_end_wrapped"):
-        setattr(wrapped_activity_end, marker,
-                bool(getattr(original_end, marker, False)))
-    activity_class.end = wrapped_activity_end
-    return True
+def get_instance() -> textonmap | None:
+    """HUD of the current activity, if any (for other mods)."""
+    activity = _CURRENT_REF() if _CURRENT_REF is not None else None
+    return getattr(activity, _HUD_ATTR, None) if activity is not None else None
 
 
 def _ensure_for_activity(activity) -> bool:
-    global _INSTANCE, _CURRENT_ACTIVITY
-    if not _text_on_map_enabled() or not isinstance(activity, bs.GameActivity):
+    global _CURRENT_REF
+    if not isinstance(activity, bs.GameActivity):
         return False
-    if activity is _CURRENT_ACTIVITY and _INSTANCE is not None:
+    if getattr(activity, _HUD_ATTR, None) is not None:
         return True
+    settings = _get_settings_snapshot()  # read once per game
+    if not _tom_enabled(settings):
+        return False
     try:
         with activity.context:
-            instance = textonmap()
-        activity._lucious_hud = instance  # lifetime == activity lifetime
-        _CURRENT_ACTIVITY, _INSTANCE = activity, instance
+            instance = textonmap(settings)
+        setattr(activity, _HUD_ATTR, instance)  # lifetime == activity lifetime
+        _CURRENT_REF = weakref.ref(activity)
         return True
     except Exception:
         _LOG.exception("Could not create LuciousHUD for GameActivity.")
@@ -627,8 +631,6 @@ def install() -> bool:
     if not _text_on_map_enabled():
         _LOG.info("TextOnMap disabled in setting.json; HUD not installed.")
         return True
-    if not _install_activity_end_cleanup():
-        return False
 
     activity_class = bs.Activity
     original_begin = getattr(activity_class, "begin", None)
@@ -637,13 +639,14 @@ def install() -> bool:
         return False
 
     if not getattr(original_begin, "_text_on_map_begin_wrapped", False):
+        @functools.wraps(original_begin)
         def wrapped_activity_begin(self, *args, **kwargs):
             result = original_begin(self, *args, **kwargs)
-            try:
-                if isinstance(self, bs.GameActivity):
+            if isinstance(self, bs.GameActivity):
+                try:
                     _ensure_for_activity(self)
-            except Exception:
-                _LOG.exception("LuciousHUD begin hook failed.")
+                except Exception:
+                    _LOG.exception("LuciousHUD begin hook failed.")
             return result
 
         wrapped_activity_begin._text_on_map_begin_wrapped = True

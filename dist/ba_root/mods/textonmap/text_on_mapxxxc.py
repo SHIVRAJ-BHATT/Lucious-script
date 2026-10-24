@@ -47,7 +47,7 @@ HUD_TEXT = {
     # Text overlays.
     "watermark_line": "__________________________________",
     "watermark_owner": "\ue043 OWNER: LUCIOUS \ue043",
-    "watermark_editor": "\ue043 EDITOR: LUCIOUS \ue043",
+    "watermark_editor": "\ue043 EDITOR: LUCIFER \ue043",
     "bottom_thanks": "\ue043 THANK YOU FOR PLAYING IN OUR SERVER \ue043",
     "clay_text": " \ue043 L U C I O U S \ue043 ",
     "next_game": "\ue047 NEXT \ue048 : {map}",

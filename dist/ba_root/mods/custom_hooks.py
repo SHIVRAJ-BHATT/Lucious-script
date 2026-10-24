@@ -497,20 +497,16 @@ def _install_map_tint() -> None:
     _LOG.info("Installed persistent map tint hook for all GameActivity instances.")
 
 def _install_text_on_map() -> None:
-    """Install API 9 map watermarks from features/text_on_map.py."""
-    if not _setting_enabled("textonmap", "enable", True):
-        _LOG.info("TextOnMap skipped because textonmap.enable is false.")
-        return
+    """Install the switchable TextOnMap system from mods/textonmap/."""
     try:
-        from features import text_on_map
+        from textonmap import manager
 
-        if text_on_map.install():
-            _LOG.info("Installed TextOnMap watermarks.")
+        if manager.install():
+            _LOG.info("Installed TextOnMap manager.")
         else:
-            _LOG.error("TextOnMap watermarks were not installed.")
+            _LOG.error("TextOnMap manager was not installed.")
     except Exception:
-        # The watermark feature must never prevent tags, chat or bans from working.
-        _LOG.exception("Could not install TextOnMap watermarks.")
+        _LOG.exception("Could not install TextOnMap manager.")
 
 
 def _install_colorful_explosions() -> None:

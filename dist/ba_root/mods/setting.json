@@ -58,7 +58,7 @@
     }
   },
   "soloBot": {
-    "enable": true,
+    "enable": false,
     "name": "KING KAI",
     "character": "Mel",
     "nameColor": [
@@ -98,9 +98,25 @@
     "intervalSeconds": 180,
     "answerWindowSeconds": 30,
     "rewardCoins": 25,
-    "announcerName": " XYZ QUIZ "
+    "announcerName": " LUCIOUS QUIZ "
   },
   "StumbledScoreScreen": false,
+  "discordbot": {
+    "enable": false,
+    "token": "",
+    "serverID": "",
+    "logsChannelID": "",
+    "liveStatsChannelID": "",
+    "adminUsers": [
+      ""
+    ],
+    "prefix": "!",
+    "cmd_prefix": "l",
+    "webEnable": false,
+    "webUpdateSeconds": 10,
+    "webApiURL": "",
+    "webApiKey": ""
+
   },
   "mapTint": {
     "enable": false,
@@ -117,6 +133,6 @@
     "intervalSeconds": 0.25
   },
   "flyingMine": {
-    "enable": true
+    "enable": false
 }
 }

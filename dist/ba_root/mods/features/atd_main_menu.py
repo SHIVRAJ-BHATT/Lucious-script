@@ -100,7 +100,7 @@ class ATDMainMenuActivity(bs.Activity[bs.Player, bs.Team]):
         try:
             from bascenev1lib.actor.popuptext import PopupText
             PopupText(
-                '\ue062Ashu\ue062',
+                '\ue062LUCIOUS\ue062',
                 color=color,
                 scale=6.0,
                 position=pos,
