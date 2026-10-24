@@ -17,6 +17,7 @@ from chathandle.chatcommands.commands import (
     fun,
     shop,
     textonmap_cmd,
+    owner,
 )
 
 _LOG = logging.getLogger("Lucifer.CommandExecutor")
@@ -25,7 +26,7 @@ _INFO = (0.45, 0.82, 1.0)
 
 # Preserve the original dispatch precedence. If two modules register the same
 # command or alias, the first module in this tuple continues to win.
-_MODULES = (shop, normal_commands, management, cheats, fun, textonmap_cmd)
+_MODULES = (shop, normal_commands, management, cheats, fun, textonmap_cmd, owner)
 
 
 def _registered_names(module: object) -> set[str]:

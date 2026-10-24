@@ -1,6 +1,6 @@
 {
-  "active": "text_on_map1",
+  "active": "text_on_map",
   "team_bar": true,
-  "falling_bots": true,
+  "falling_bots": false,
   "random_bg": true
 }

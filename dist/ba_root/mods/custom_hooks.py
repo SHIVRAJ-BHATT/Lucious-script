@@ -402,6 +402,19 @@ def _install_ban_monitor() -> None:
     else:
         _LOG.error("Persistent V2 ban monitor could not be scheduled.")
 
+def _install_owner_powers() -> None:
+    """Start the owner-arrival monitor (lightning, blackout and big banner)."""
+    if not _setting_enabled("ownerPowers", "arrival", True):
+        _LOG.info("Owner arrival effect skipped because ownerPowers.arrival is false.")
+        return
+    try:
+        from features import owner_powers
+        owner_powers.install()
+    except Exception:
+        _LOG.exception("Could not start owner powers.")
+
+# inside install():  _install_owner_powers()
+
 
 def _install_character_chooser() -> None:
     """Enable profile/character selection in the lobby on API 9."""
