@@ -121,15 +121,15 @@
         "a-d10235016": {
             "rank": 1,
             "name": "TARRUSS",
-            "scores": 520,
+            "scores": 545,
             "total_damage": 0.0,
-            "kills": 58,
-            "deaths": 41,
-            "games": 9,
+            "kills": 62,
+            "deaths": 44,
+            "games": 10,
             "kd": 1.41,
-            "avg_score": 57.78,
+            "avg_score": 54.5,
             "aid": "a-d10235016",
-            "last_seen": "2026-10-24T08:58:53"
+            "last_seen": "2026-10-24T09:01:49"
         },
         "a-a12903644": {
             "rank": 11,

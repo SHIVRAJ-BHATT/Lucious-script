@@ -1,7 +1,8 @@
 # Released under the MIT License. See LICENSE for details.
 # ba_meta require api 9
-# Owner/Editor: Lucifer
-"""Public wallet, cosmetic-purchase, and paid-command shop commands."""
+# Original Owner/Editor: Lucious
+# Modified by: <your name here>
+"""Wallet, cosmetic store, and paid-command store chat commands."""
 
 from __future__ import annotations
 
@@ -14,26 +15,48 @@ from chathandle.chatcommands import handlers
 from shop import coins
 from tools.account_ids import is_v2_account_id
 
-_LOG = logging.getLogger("Lucifer.CoinShopCommands")
-_RED = (1.0, 0.22, 0.24)
-_GOLD = (1.0, 0.78, 0.25)
-_CYAN = (0.35, 0.9, 1.0)
-_LEFT = "\ue04c"
-_RIGHT = "\ue04d"
-_ERROR_GLYPH = "\ue062"
+# ======================================================================
+#  THEME - edit these values to restyle every message in this file
+# ======================================================================
+STORE_NAME = "LUCIOUS STORE"
+STORE_FOOTER = "coins  |  style  |  perks"
+
+_COLOR_MAIN = (0.70, 0.45, 1.00)    # violet - main panels
+_COLOR_INFO = (0.40, 1.00, 0.75)    # mint   - lists / info
+_COLOR_ERROR = (1.00, 0.35, 0.50)   # rose   - errors
+
+_OPEN = "«"
+_CLOSE = "»"
+_BULLET = "+"
+_DIVIDER = "-" * 20
+# ======================================================================
+
+_LOG = logging.getLogger("NovaStore.Commands")
 
 Commands = ["me", "daily", "topcoins", "shop", "buytag", "buyeffect", "cmdshop"]
 CommandAliases: list[str] = []
 _PAID_COMMAND_KEYS = ("end", "nv", "gm")
 
-# Command modules and their exported command names are stable during normal
-# server operation. Cache them to avoid repeated import/attribute scanning in
-# /cmdshop and paid-command dispatch. Call refresh_shop_command_registry() if
-# command registrations are changed dynamically at runtime.
 _REGISTERED_MODULES: tuple[Any, ...] | None = None
 _REGISTERED_NAME_CACHE: dict[int, tuple[Any, frozenset[str]]] = {}
 
+# Fixed prices for allowlisted paid commands.
+_PAID_COMMAND_PRICES = {
+    "nv": 2000,
+    "end": 5000,
+    "gm": 5000,
+}
 
+# Fixed cosmetic prices (used for display and purchases).
+_COSMETIC_PRICES = {
+    "tagPrice": 2000,
+    "effectPrice": 5000,
+}
+
+
+# ----------------------------------------------------------------------
+#  Settings
+# ----------------------------------------------------------------------
 def _config() -> dict[str, Any]:
     try:
         import setting
@@ -54,7 +77,6 @@ def _paid_config() -> dict[str, Any]:
 
 
 def _price(key: str, default: int) -> int:
-    """Return the fixed cosmetic price used for display and transactions."""
     if key in _COSMETIC_PRICES:
         return _COSMETIC_PRICES[key]
     raw = _config().get(key, default)
@@ -63,23 +85,7 @@ def _price(key: str, default: int) -> int:
     return raw
 
 
-# Fixed prices for the allowlisted paid commands.
-# /nv is the lower-impact option; /end and /gm cost more.
-_PAID_COMMAND_PRICES = {
-    "nv": 2000,
-    "end": 5000,
-    "gm": 5000,
-}
-
-# Fixed cosmetic prices; these are used for both shop display and purchases.
-_COSMETIC_PRICES = {
-    "tagPrice": 2000,
-    "effectPrice": 5000,
-}
-
-
 def _paid_price_from_config(command: str, economy: dict[str, Any]) -> int | None:
-    """Resolve an allowlisted command's price from one settings snapshot."""
     paid_config = economy.get("paidCommands", {})
     if (
         not bool(economy.get("enable", True))
@@ -94,16 +100,17 @@ def _paid_price_from_config(command: str, economy: dict[str, Any]) -> int | None
 
 
 def _paid_price(command: str) -> int | None:
-    """Return the fixed price for an enabled, allowlisted paid command."""
     return _paid_price_from_config(command, _config())
 
 
 def is_paid_command(command: str) -> bool:
-    """True only for the explicit paid-command allowlist and active settings."""
     return _paid_price(str(command).strip().casefold().lstrip("/")) is not None
 
 
-def _send(message: str, clientid: int, color: tuple[float, float, float] = _CYAN) -> None:
+# ----------------------------------------------------------------------
+#  Message styling
+# ----------------------------------------------------------------------
+def _send(message: str, clientid: int, color: tuple[float, float, float] = _COLOR_INFO) -> None:
     try:
         handlers.send(message, clientid, color=color)
     except TypeError:
@@ -111,21 +118,29 @@ def _send(message: str, clientid: int, color: tuple[float, float, float] = _CYAN
 
 
 def _error(message: str, clientid: int) -> None:
-    _send(f"{_ERROR_GLYPH}  {_LEFT} {message} {_RIGHT}  {_ERROR_GLYPH}", clientid, _RED)
+    _send(f"[!] {message}", clientid, _COLOR_ERROR)
 
 
-def _panel(title: str, body: str, clientid: int) -> None:
+def _panel(title: str, lines: list[str], clientid: int,
+           color: tuple[float, float, float] = _COLOR_MAIN) -> None:
+    body = "\n".join(f"  {_BULLET} {line}" for line in lines)
     _send(
-        f"{_LEFT}  LUCIFER ECONOMY  {_RIGHT}\n"
-        f"\ue049  {title}\n{body}\n"
-        f"{_LEFT}  COINS • COSMETICS • REWARDS  {_RIGHT}",
+        f"{_OPEN} {STORE_NAME} {_CLOSE}\n"
+        f"{_DIVIDER}\n"
+        f"> {title}\n"
+        f"{body}\n"
+        f"{_DIVIDER}\n"
+        f"{STORE_FOOTER}",
         clientid,
-        _GOLD,
+        color,
     )
 
 
+# ----------------------------------------------------------------------
+#  Player helpers
+# ----------------------------------------------------------------------
 def _player_name(clientid: int) -> str:
-    """Get a display name for presentation only; never use it as identity."""
+    """Display name only; never used as identity."""
     try:
         activity = bs.get_foreground_host_activity()
         if activity is not None:
@@ -159,16 +174,18 @@ def _player_name(clientid: int) -> str:
 
 def _require_wallet(account_id: str | None, clientid: int) -> tuple[str, str] | None:
     if not _economy_enabled():
-        _error("The coin economy is currently disabled.", clientid)
+        _error("The store is closed right now.", clientid)
         return None
     if not is_v2_account_id(account_id):
-        _error("A verified V2 account is required for a persistent wallet.", clientid)
+        _error("You need a signed-in V2 account to use a wallet.", clientid)
         return None
     return account_id, _player_name(clientid)
 
 
+# ----------------------------------------------------------------------
+#  Command registry
+# ----------------------------------------------------------------------
 def _registered_modules() -> tuple[Any, ...]:
-    """Load and cache existing command modules without creating import cycles."""
     global _REGISTERED_MODULES
     if _REGISTERED_MODULES is not None:
         return _REGISTERED_MODULES
@@ -176,7 +193,6 @@ def _registered_modules() -> tuple[Any, ...]:
         from chathandle.chatcommands.commands import normal_commands, management, cheats, fun
         modules = (normal_commands, management, cheats, fun)
     except Exception:
-        # Do not cache a failed import; a later call can retry after startup.
         _LOG.exception("Could not inspect installed command modules.")
         return ()
     _REGISTERED_MODULES = modules
@@ -184,12 +200,10 @@ def _registered_modules() -> tuple[Any, ...]:
 
 
 def _registered_names(module: Any) -> frozenset[str]:
-    """Return cached normalized command names for a module."""
     cache_key = id(module)
     cached = _REGISTERED_NAME_CACHE.get(cache_key)
     if cached is not None and cached[0] is module:
         return cached[1]
-
     names: set[str] = set()
     for attr in ("Commands", "CommandAliases"):
         raw = getattr(module, attr, ()) or ()
@@ -201,18 +215,12 @@ def _registered_names(module: Any) -> frozenset[str]:
 
 
 def refresh_shop_command_registry() -> None:
-    """Clear command metadata caches after runtime command registration changes."""
     global _REGISTERED_MODULES
     _REGISTERED_MODULES = None
     _REGISTERED_NAME_CACHE.clear()
 
 
 def has_command_permission(account_id: str | None, command: str, module: Any) -> bool:
-    """Return whether the player already has role permission for a command.
-
-    Permission lookup failures raise instead of silently treating the player as
-    unprivileged; in that case the dispatcher will fail closed without charging.
-    """
     normalized = str(command).strip().casefold().lstrip("/")
     try:
         if handlers.check_permissions(account_id, normalized):
@@ -229,7 +237,6 @@ def has_command_permission(account_id: str | None, command: str, module: Any) ->
 
 
 def find_paid_command_module(command: str, modules: tuple[Any, ...] | list[Any] | None = None) -> Any | None:
-    """Find a registered implementation for one configured paid command."""
     normalized = str(command).strip().casefold().lstrip("/")
     if normalized not in _PAID_COMMAND_KEYS or _paid_price(normalized) is None:
         return None
@@ -243,7 +250,6 @@ def find_paid_command_module(command: str, modules: tuple[Any, ...] | list[Any] 
 
 
 def available_paid_commands(modules: tuple[Any, ...] | list[Any] | None = None) -> list[tuple[str, int]]:
-    """List enabled paid commands that currently have a registered handler."""
     economy = _config()
     candidates = tuple(modules) if modules is not None else _registered_modules()
     registered: set[str] = set()
@@ -252,7 +258,6 @@ def available_paid_commands(modules: tuple[Any, ...] | list[Any] | None = None) 
             continue
         if callable(getattr(module, "ExcelCommand", None)):
             registered.update(_registered_names(module))
-
     result: list[tuple[str, int]] = []
     for command in _PAID_COMMAND_KEYS:
         price = _paid_price_from_config(command, economy)
@@ -262,7 +267,6 @@ def available_paid_commands(modules: tuple[Any, ...] | list[Any] | None = None) 
 
 
 def _refresh_player_effect(clientid: int, account_id: str) -> None:
-    """Refresh a saved effect on a live character, if one exists."""
     try:
         activity = bs.get_foreground_host_activity()
         if activity is None:
@@ -279,9 +283,12 @@ def _refresh_player_effect(clientid: int, account_id: str) -> None:
             except Exception:
                 continue
     except Exception:
-        _LOG.exception("Could not refresh a purchased custom effect immediately.")
+        _LOG.exception("Could not refresh a purchased effect immediately.")
 
 
+# ----------------------------------------------------------------------
+#  Public commands
+# ----------------------------------------------------------------------
 def _me(arguments: list[str], clientid: int, account_id: str | None) -> bool:
     if arguments:
         _error("Usage: /me", clientid)
@@ -294,9 +301,9 @@ def _me(arguments: list[str], clientid: int, account_id: str | None) -> bool:
         balance = coins.get_balance(account, name)
     except Exception:
         _LOG.exception("Could not read the wallet for %s.", account)
-        _error("Wallet data is unavailable; check the server log.", clientid)
+        _error("Couldn't load your wallet. Please tell an admin.", clientid)
         return False
-    _panel("YOUR WALLET", f"\ue048  BALANCE: {balance:,} COINS", clientid)
+    _panel("My Wallet", [f"Player: {name}", f"Balance: {balance:,} coins"], clientid)
     return True
 
 
@@ -319,14 +326,14 @@ def _daily(arguments: list[str], clientid: int, account_id: str | None) -> bool:
         claimed, balance, remaining = coins.claim_daily(account, reward, cooldown, name)
     except Exception:
         _LOG.exception("Daily claim failed for V2 account %s.", account)
-        _error("Daily reward could not be saved. Check the server log.", clientid)
+        _error("Couldn't save your daily bonus. Please tell an admin.", clientid)
         return False
     if not claimed:
         hours, remainder = divmod(remaining, 3600)
         minutes = remainder // 60
-        _error(f"Daily reward already claimed. Try again in {hours}h {minutes}m.", clientid)
+        _error(f"Already collected! Come back in {hours}h {minutes}m.", clientid)
         return False
-    _panel("DAILY REWARD CLAIMED", f"\ue047  +{reward:,} COINS\n\ue048  BALANCE: {balance:,}", clientid)
+    _panel("Daily Bonus", [f"Received: +{reward:,} coins", f"Balance: {balance:,} coins"], clientid)
     return True
 
 
@@ -335,23 +342,22 @@ def _topcoins(arguments: list[str], clientid: int) -> bool:
         _error("Usage: /topcoins", clientid)
         return False
     if not _economy_enabled():
-        _error("The coin economy is currently disabled.", clientid)
+        _error("The store is closed right now.", clientid)
         return False
     try:
         leaders = coins.top_balances(10)
     except Exception:
         _LOG.exception("Could not load the coin leaderboard.")
-        _error("Coin leaderboard is unavailable; check the server log.", clientid)
+        _error("Leaderboard unavailable right now.", clientid)
         return False
     if not leaders:
-        _panel("TOP COIN HOLDERS", "No coin balances yet. Use /daily to start earning.", clientid)
+        _panel("Richest Players", ["Nobody has coins yet - try /daily!"], clientid, _COLOR_INFO)
         return True
-    lines = [f"{_LEFT}  TOP 10 COIN HOLDERS  {_RIGHT}"]
+    lines = []
     for index, player in enumerate(leaders, 1):
-        name = str(player.get("name", "Player"))[:22]
-        lines.append(f"\ue047  {index}. {name}  •  {int(player['balance']):,}")
-    lines.append(f"{_LEFT}  LUCIFER ECONOMY  {_RIGHT}")
-    _send("\n".join(lines), clientid, _GOLD)
+        pname = str(player.get("name", "Player"))[:22]
+        lines.append(f"#{index}  {pname}  -  {int(player['balance']):,}")
+    _panel("Richest Players", lines, clientid, _COLOR_INFO)
     return True
 
 
@@ -365,89 +371,78 @@ def _shop(arguments: list[str], clientid: int) -> bool:
         from spazmod import spaz_effects
         effects = sorted(spaz_effects.EFFECT_NAMES)
     except Exception:
-        _LOG.exception("Could not load supported custom effects for the shop listing.")
+        _LOG.exception("Could not load custom effects for the store listing.")
         effects = []
-    body = (
-        f"\ue047  /buytag <your text>  •  {tag_price:,} COINS\n"
-        f"\ue047  /buyeffect <name>  •  {effect_price:,} COINS\n"
-        "\ue043  One fixed price per successful change; no rarity tiers."
-    )
+    lines = [
+        f"/buytag <text>   ->  {tag_price:,} coins",
+        f"/buyeffect <name>  ->  {effect_price:,} coins",
+        "You only pay when the change is applied.",
+    ]
     if effects:
-        body += "\n\ue048  EFFECTS: " + ", ".join(effects)
-    _panel("COSMETIC SHOP", body, clientid)
+        lines.append("Effects: " + ", ".join(effects))
+    _panel("Cosmetics", lines, clientid)
     return True
 
 
-def _refund_cosmetic_purchase(
-    account: str, price: int, name: str, clientid: int, item_label: str
-) -> bool:
-    """Refund a failed cosmetic purchase and make refund failures explicit."""
+def _refund_cosmetic_purchase(account: str, price: int, name: str,
+                              clientid: int, item_label: str) -> bool:
     try:
         coins.add_coins(account, price, name)
         return True
     except Exception:
-        _LOG.exception(
-            "CRITICAL: could not refund failed %s purchase to V2 account %s.",
-            item_label,
-            account,
-        )
-        _error(
-            f"{item_label} could not be saved and the automatic refund failed. "
-            "Contact an admin before retrying.",
-            clientid,
-        )
+        _LOG.exception("CRITICAL: refund failed for %s purchase, account %s.", item_label, account)
+        _error(f"{item_label} failed AND the refund failed. Contact an admin before retrying.", clientid)
         return False
 
 
 def _buytag(arguments: list[str], clientid: int, account_id: str | None) -> bool:
     if not arguments:
-        _error("Usage: /buytag <your custom tag text>", clientid)
+        _error("Usage: /buytag <tag text>", clientid)
         return False
     wallet = _require_wallet(account_id, clientid)
     if wallet is None:
         return False
     account, name = wallet
     text = " ".join(arguments).strip()
-    if not text or len(text) > 32 or any(ord(char) < 32 or ord(char) == 127 for char in text):
-        _error("Tag text must be 1-32 printable characters.", clientid)
+    if not text or len(text) > 32 or any(ord(c) < 32 or ord(c) == 127 for c in text):
+        _error("Tags must be 1-32 normal characters.", clientid)
         return False
-
     try:
         from playersdata import pdata
-        current = pdata.get_custom_tag(account)
-        if current == text:
-            _error("That tag is already set. No coins were charged.", clientid)
+        if pdata.get_custom_tag(account) == text:
+            _error("You already have that tag. Nothing was charged.", clientid)
             return False
         price = _price("tagPrice", 100)
         new_balance = coins.spend_coins(account, price, name)
         if new_balance is None:
-            _error(f"Not enough coins. /buytag costs {price:,}; use /me to check your balance.", clientid)
+            _error(f"Not enough coins - a tag costs {price:,}. Check with /me.", clientid)
             return False
         try:
             saved = pdata.set_custom_tag(account, text)
         except Exception:
-            _LOG.exception("Could not save purchased custom tag for %s.", account)
+            _LOG.exception("Could not save custom tag for %s.", account)
             saved = False
         if not saved:
             if _refund_cosmetic_purchase(account, price, name, clientid, "Tag"):
-                _error("Tag could not be saved; your coins were refunded.", clientid)
+                _error("Tag couldn't be saved - coins refunded.", clientid)
             return False
         try:
             from spazmod import tag as tag_system
             tag_system.refresh_client_tag(clientid)
         except Exception:
-            _LOG.exception("Tag was saved but could not refresh live; it applies on next spawn.")
-        _panel("CUSTOM TAG ACTIVATED", f"\ue047  TAG: {text}\n\ue048  -{price:,} COINS\n\ue043  BALANCE: {new_balance:,}", clientid)
+            _LOG.exception("Tag saved but live refresh failed; applies next spawn.")
+        _panel("Tag Updated", [f"New tag: {text}", f"Cost: {price:,} coins",
+                               f"Balance: {new_balance:,} coins"], clientid)
         return True
     except Exception:
         _LOG.exception("/buytag failed for account %s.", account)
-        _error("Tag purchase failed. Check server logs for wallet or tag storage errors.", clientid)
+        _error("Tag purchase failed. Please tell an admin.", clientid)
         return False
 
 
 def _buyeffect(arguments: list[str], clientid: int, account_id: str | None) -> bool:
     if len(arguments) != 1:
-        _error("Usage: /buyeffect <supported_effect_name>", clientid)
+        _error("Usage: /buyeffect <effect name>", clientid)
         return False
     wallet = _require_wallet(account_id, clientid)
     if wallet is None:
@@ -459,31 +454,32 @@ def _buyeffect(arguments: list[str], clientid: int, account_id: str | None) -> b
         effect_name = spaz_effects.normalize_effect_name(arguments[0])
         if effect_name is None:
             supported = ", ".join(sorted(spaz_effects.EFFECT_NAMES))
-            _error(f"Unsupported effect. Available: {supported}", clientid)
+            _error(f"Unknown effect. Try: {supported}", clientid)
             return False
         if effect_name in pdata.get_custom_effects(account):
-            _error("That effect is already assigned. No coins were charged.", clientid)
+            _error("You already own that effect. Nothing was charged.", clientid)
             return False
         price = _price("effectPrice", 200)
         new_balance = coins.spend_coins(account, price, name)
         if new_balance is None:
-            _error(f"Not enough coins. /buyeffect costs {price:,}; use /me to check your balance.", clientid)
+            _error(f"Not enough coins - an effect costs {price:,}. Check with /me.", clientid)
             return False
         try:
             saved = pdata.set_effect(effect_name, account)
         except Exception:
-            _LOG.exception("Could not save purchased custom effect for %s.", account)
+            _LOG.exception("Could not save custom effect for %s.", account)
             saved = False
         if not saved:
             if _refund_cosmetic_purchase(account, price, name, clientid, "Effect"):
-                _error("Effect could not be saved; your coins were refunded.", clientid)
+                _error("Effect couldn't be saved - coins refunded.", clientid)
             return False
         _refresh_player_effect(clientid, account)
-        _panel("CUSTOM EFFECT UNLOCKED", f"\ue047  EFFECT: {effect_name}\n\ue048  -{price:,} COINS\n\ue043  BALANCE: {new_balance:,}", clientid)
+        _panel("Effect Added", [f"Effect: {effect_name}", f"Cost: {price:,} coins",
+                                f"Balance: {new_balance:,} coins"], clientid)
         return True
     except Exception:
         _LOG.exception("/buyeffect failed for account %s.", account)
-        _error("Effect purchase failed. Check server logs for wallet or effect storage errors.", clientid)
+        _error("Effect purchase failed. Please tell an admin.", clientid)
         return False
 
 
@@ -492,22 +488,19 @@ def _cmdshop(arguments: list[str], clientid: int) -> bool:
         _error("Usage: /cmdshop", clientid)
         return False
     if not _economy_enabled():
-        _error("The coin economy is currently disabled.", clientid)
+        _error("The store is closed right now.", clientid)
         return False
     commands = available_paid_commands()
     if not commands:
-        _panel("PAID COMMAND SHOP", "No configured paid commands are registered right now.", clientid)
+        _panel("Command Store", ["No commands for sale right now."], clientid, _COLOR_INFO)
         return True
-    lines = [f"{_LEFT}  PAID COMMANDS  {_RIGHT}"]
-    for command, price in commands:
-        lines.append(f"\ue047  /{command}  •  {price:,} COINS")
-    lines.append("\ue043  Coins are charged only when a command succeeds.")
-    _send("\n".join(lines), clientid, _GOLD)
+    lines = [f"/{cmd}  ->  {price:,} coins" for cmd, price in commands]
+    lines.append("You only pay if the command works.")
+    _panel("Command Store", lines, clientid, _COLOR_INFO)
     return True
 
 
 def ExcelCommand(command: str, arguments: list[str], clientid: int, accountid: str | None) -> bool:
-    """Dispatch public economy commands; paid protected commands use a separate path."""
     normalized = str(command).strip().casefold().lstrip("/")
     if normalized == "me":
         return _me(arguments, clientid, accountid)
@@ -526,9 +519,11 @@ def ExcelCommand(command: str, arguments: list[str], clientid: int, accountid: s
     return False
 
 
+# ----------------------------------------------------------------------
+#  Paid commands
+# ----------------------------------------------------------------------
 def execute_paid_command(command: str, arguments: list[str], clientid: int,
                          account_id: str | None, target_module: Any) -> bool:
-    """Charge for one allowlisted command; refund when the action fails."""
     command = str(command).strip().casefold().lstrip("/")
     price = _paid_price(command)
     if price is None or command not in _PAID_COMMAND_KEYS:
@@ -539,7 +534,7 @@ def execute_paid_command(command: str, arguments: list[str], clientid: int,
     account, name = wallet
     handler = getattr(target_module, "ExcelCommand", None)
     if not callable(handler) or command not in _registered_names(target_module):
-        _error(f"/{command} is not available on this server.", clientid)
+        _error(f"/{command} isn't available here.", clientid)
         return False
     if command in ("end", "nv") and arguments:
         _error(f"Usage: /{command}", clientid)
@@ -550,28 +545,26 @@ def execute_paid_command(command: str, arguments: list[str], clientid: int,
         except Exception:
             activity = None
         if activity is None:
-            _error("There is no active game for that command.", clientid)
+            _error("No game is running right now.", clientid)
             return False
         if command == "end" and not callable(getattr(activity, "end_game", None)):
-            _error("The current activity cannot be ended as a game.", clientid)
+            _error("This activity can't be ended.", clientid)
             return False
         if command == "nv" and not hasattr(activity, "globalsnode"):
-            _error("Night vision is unavailable in the current activity.", clientid)
+            _error("Night vision doesn't work in this activity.", clientid)
             return False
 
     try:
         new_balance = coins.spend_coins(account, price, name)
     except Exception:
         _LOG.exception("Could not charge V2 account %s for /%s.", account, command)
-        _error("Payment could not be processed. No command was run.", clientid)
+        _error("Payment failed. The command was not used.", clientid)
         return False
     if new_balance is None:
-        _error(f"Not enough coins. /{command} costs {price:,}; use /me to check your balance.", clientid)
+        _error(f"Not enough coins - /{command} costs {price:,}. Check with /me.", clientid)
         return False
 
     try:
-        # Styled implementations for /end and /nv prevent these paid uses from
-        # adding plain generic status text from the existing management module.
         if command == "end":
             activity = bs.get_foreground_host_activity()
             with activity.context:
@@ -593,16 +586,17 @@ def execute_paid_command(command: str, arguments: list[str], clientid: int,
         try:
             coins.add_coins(account, price, name)
         except Exception:
-            _LOG.exception("CRITICAL: could not refund failed paid command /%s to %s.", command, account)
-            _error("Command failed and automatic refund also failed. Contact an admin with the server log.", clientid)
+            _LOG.exception("CRITICAL: refund failed for paid /%s, account %s.", command, account)
+            _error("Command failed AND the refund failed. Contact an admin.", clientid)
             return False
-        _error(f"/{command} failed. {price:,} coins were refunded.", clientid)
+        _error(f"/{command} didn't work - {price:,} coins refunded.", clientid)
         return False
 
-    body = f"\ue047  /{command} EXECUTED\n\ue048  -{price:,} COINS\n\ue043  BALANCE: {new_balance:,}"
+    lines = [f"Used: /{command}", f"Cost: {price:,} coins", f"Balance: {new_balance:,} coins"]
     if command == "end":
-        body += "\n\ue043  Ending the current game."
+        lines.append("Ending the current game...")
     elif command == "nv":
-        body += "\n\ue043  Night vision enabled."
-    _panel("PAID COMMAND SUCCESS", body, clientid)
+        lines.append("Night vision is on.")
+    _panel("Command Used", lines, clientid)
     return True
+

@@ -2,7 +2,7 @@
     "startDate": "24-10-2026",
     "stats": {
         "a-a4226328": {
-            "rank": 16,
+            "rank": 18,
             "name": "⺃⼐⼕⼁㆘⺒⺇",
             "scores": 0,
             "total_damage": 0.0,
@@ -15,7 +15,7 @@
             "last_seen": "2026-10-21T11:48:56"
         },
         "a-b16353228": {
-            "rank": 15,
+            "rank": 17,
             "name": "Wallace",
             "scores": 0,
             "total_damage": 0.0,
@@ -67,7 +67,7 @@
             "last_seen": "2026-10-24T07:29:12"
         },
         "a-21369195": {
-            "rank": 17,
+            "rank": 19,
             "name": "Mad Dog",
             "scores": 0,
             "total_damage": 0.0,
@@ -80,7 +80,7 @@
             "last_seen": "2026-10-24T07:20:39"
         },
         "a-19274411": {
-            "rank": 12,
+            "rank": 13,
             "name": "Versat1359",
             "scores": 10,
             "total_damage": 0.0,
@@ -132,7 +132,7 @@
             "last_seen": "2026-10-24T09:01:49"
         },
         "a-a12903644": {
-            "rank": 11,
+            "rank": 12,
             "name": "Darkcorpse",
             "scores": 10,
             "total_damage": 0.0,
@@ -145,7 +145,7 @@
             "last_seen": "2026-10-24T08:09:01"
         },
         "a-a21394387": {
-            "rank": 14,
+            "rank": 15,
             "name": "Aashik4747",
             "scores": 5,
             "total_damage": 0.0,
@@ -158,7 +158,7 @@
             "last_seen": "2026-10-24T08:15:53"
         },
         "a-b20343622": {
-            "rank": 10,
+            "rank": 11,
             "name": "DivineDeox",
             "scores": 20,
             "total_damage": 0.0,
@@ -171,7 +171,7 @@
             "last_seen": "2026-10-24T08:58:53"
         },
         "a-b19127291": {
-            "rank": 13,
+            "rank": 14,
             "name": "$ÃVÃGÉ!😈",
             "scores": 10,
             "total_damage": 0.0,
@@ -221,6 +221,32 @@
             "avg_score": 30.0,
             "aid": "a-b20925950",
             "last_seen": "2026-10-24T08:54:55"
+        },
+        "a-a21069760": {
+            "rank": 10,
+            "name": "high close...",
+            "scores": 30,
+            "total_damage": 0.0,
+            "kills": 3,
+            "deaths": 5,
+            "games": 1,
+            "kd": 0.6,
+            "avg_score": 30.0,
+            "aid": "a-a21069760",
+            "last_seen": "2026-10-25T07:54:32"
+        },
+        "a-a20792379": {
+            "rank": 16,
+            "name": "FurryTruck",
+            "scores": 5,
+            "total_damage": 0.0,
+            "kills": 1,
+            "deaths": 3,
+            "games": 1,
+            "kd": 0.33,
+            "avg_score": 5.0,
+            "aid": "a-a20792379",
+            "last_seen": "2026-10-25T07:54:32"
         }
     }
 }
