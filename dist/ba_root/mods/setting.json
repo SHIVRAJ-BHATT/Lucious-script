@@ -3,7 +3,7 @@
     "arrival": true
   },
   "autoNightMode": {
-    "enable": false,
+    "enable": true,
     "startTime": "18:30",
     "endTime": "06:30",
     "timezone": "Asia/Kolkata"
@@ -19,7 +19,7 @@
     "enable": true,
     "refreshSeconds": 10
   },
-  "enableTop3effects": false,
+  "enableTop3effects": true,
   "hiteffects": false,
   "hitmessages": false,
   "top3Effects": {
@@ -32,15 +32,15 @@
   },
   "playermod": {
     "default_boxing_gloves": true,
-    "default_bomb_count": 2,
+    "default_bomb_count": 5,
     "default_bomb": "normal",
-    "enable_death_flight": false
+    "enable_death_flight": true
   },
   "colorful_explosions": {
-    "enable": false
+    "enable": true
   },
   "snowfall": {
-    "enable": false,
+    "enable": true,
     "size": 0.75,
     "fallSpeed": 50.0,
     "particleCount": 10
@@ -101,7 +101,7 @@
     "intervalSeconds": 180,
     "answerWindowSeconds": 30,
     "rewardCoins": 25,
-    "announcerName": " LUCIOUS QUIZ "
+    "announcerName": "\ue04dLUCIOUS QUIZ\ue04d"
   },
   "StumbledScoreScreen": false,
   "discordbot": {
@@ -129,7 +129,7 @@
     ]
   },
   "powerupEffects": {
-    "enable": false,
+    "enable": true,
     "effect": "spark",
     "continuous": false,
     "intervalSeconds": 0.25

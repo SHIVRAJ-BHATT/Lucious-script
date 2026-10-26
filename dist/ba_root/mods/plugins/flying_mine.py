@@ -57,7 +57,7 @@ class Mine(bs.Actor):
                 "mesh": bs.getmesh("landMine"),
                 "mesh_scale": 3.3,
                 # Use only the built-in Powerup Curse texture; no random selection.
-                "color_texture": bs.gettexture("powerupCurse"),
+                "color_texture": bs.gettexture("powerupShield"),
                 "body_scale": 3.3,
                 "reflection": "powerup",
                 "reflection_scale": [0.6],

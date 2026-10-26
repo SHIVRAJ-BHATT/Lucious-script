@@ -73,7 +73,7 @@ DEFAULTS: dict[str, dict[str, Any]] = {
         ],
         "card_line": "______________________________",
         "card_owner": "\ue043 OWNER: LUCIOUS AND ROBIN \ue043",
-        "card_editor": "\ue043 EDITOR: LUCIFER \ue043",
+        "card_editor": "\ue043 EDITOR: LUCIOUS \ue043",
         "bottom_thanks": "\ue043 THANK YOU FOR PLAYING IN OUR SERVER \ue043",
         "next_game": "\ue047 NEXT \ue048 : {map}",
         "online": "\ue047 ONLINE : {count}{max}",

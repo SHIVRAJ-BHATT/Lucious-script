@@ -75,7 +75,8 @@ session_max_players_override = 16
 # your own custom playlists, use the 'share' functionality in the
 # playlist editor in the regular version of the game. This will give
 # you a numeric code you can enter here to host that playlist.
-playlist_code = 628550
+playlist_code = 629687 
+# Default is 628550
 
 
 # Whether to shuffle the playlist or play its games in designated
