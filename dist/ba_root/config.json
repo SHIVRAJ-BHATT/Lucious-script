@@ -194,26 +194,35 @@
    ]
   }
  },
- "Plugins": {
+"Plugins": {
+  "paradisee_api9.ParadiseeMap": {
+    "enabled": true
+  },
+  "backflip-api9.Droopyyyy": {
+    "enabled": true
+  },
+  "soccer-ultimate.HockeyGame": {
+    "enabled": true
+  },
   "Chute_queimada.QueimadaBallPlugin": {
-   "enabled": true
+    "enabled": true
   },
   "aura_overload_fx.AuraOverloadFX": {
-   "enabled": true
+    "enabled": true
   },
   "custom_hooks.CustomHooksPlugin": {
-   "enabled": true
+    "enabled": true
   },
   "strike_ball_map.FluffysGame6_SB": {
-   "enabled": true
+    "enabled": true
   },
   "the_cyborg_pad-dorm.HWProgram": {
-   "enabled": true
+    "enabled": true
   },
   "wintermode-1-1.by_vladdos": {
-   "enabled": true
+    "enabled": true
   }
- },
+},
  "Port": 43210,
  "Show Tutorial": false,
  "Signed In Last Session": false,
